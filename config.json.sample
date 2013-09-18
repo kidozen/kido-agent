@@ -1,0 +1,8 @@
+{
+    "name": "my-machine",
+    "credentials": {
+        "user": "my-user@kidozen.com",
+        "password": "password",
+        "marketplace": "https://my-company.kidocloud.com"
+    }
+}
