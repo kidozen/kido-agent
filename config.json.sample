@@ -2,7 +2,7 @@
     "name": "my-machine",
     "credentials": {
         "user": "my-user@kidozen.com",
-        "password": "password",
+        "password": "my-password",
         "marketplace": "https://my-company.kidocloud.com"
     }
 }
