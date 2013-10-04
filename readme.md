@@ -19,8 +19,4 @@ Create a config.json file (you can copy and edit config.json.sample)
 
 Run the service executing:
 
-	npm start
-
-Or executing:
-	
-	node server.js
+	node ./bin/server

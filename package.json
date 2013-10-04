@@ -1,8 +1,8 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.1",
-  "main": "./bin/server.js",
+  "version": "0.1.2",
+  "main": "./bin/server",
   "dependencies": {
     "keypress": "0.2.1",
     "express": "3.3.4",
@@ -19,8 +19,7 @@
       "mockuire": "0.0.3"
   },
   "scripts": {
-    "test": "mocha -R spec test",
-    "start": "node ./bin/server.js"
+    "test": "mocha -R spec test"
   },
   "bin": {
     "kido-agent": "./bin/server"
