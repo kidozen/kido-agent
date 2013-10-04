@@ -2,14 +2,13 @@
 require("simple-errors");
 
 var os		= require("os");
-var agent 	= require("./lib/agent");
 var winston = require("winston");
+var agent 	= require("../lib/agent");
 
 var level = process.argv.indexOf("--level");
-if (level > -1) {
-    winston.clear();
-    winston.add(winston.transports.Console, { colorize: true, level: process.argv[level + 1] || "info"});
-}
+level = ((level > -1) ? process.argv[level + 1] : null) || "info"; 
+winston.clear();
+winston.add(winston.transports.Console, { colorize: true, level: level });
 
 var keypress = require('keypress');
 keypress(process.stdin);
