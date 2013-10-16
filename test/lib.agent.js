@@ -7,7 +7,7 @@ server.send = function(name, data, timeout) {
 
 
 var MockConnector = function (settings) {
-	if (settings && settings.fail) throw new Error("Invalid connector cconfiguration.");
+	if (settings && settings.fail) throw new Error("Invalid connector configuration.");
 
 	this.config =  settings;
 
@@ -22,6 +22,26 @@ var MockConnector = function (settings) {
 	this.exception = function (options, cb) {
 		throw new Error("exception");
 	};
+};
+
+var MockConnectorLookup = function (settings) {
+	if (settings && settings.fail) throw new Error("Invalid connector configuration.");
+
+	this.config =  settings;
+
+	this.foo = function (options, cb) {
+		cb(null, options);
+	};
+
+	this.lookupMethod = function (name, cb) {
+        if (name === "simulateError") return cb(new Error("error simulated"));
+        else if (name === "notExist") return cb();
+        else if (name === "bar") return cb(null, function (options, cb) {
+            if (!options) return cb(new Error("options is missing"));
+            cb(null, "result lookup bar " + options);
+        });
+        else throw new Error("should not reach this point.");
+    };
 };
 
 var mockNpm = {
@@ -495,6 +515,30 @@ describe("Agent", function() {
 						data: {
 							service: "foo",
 							method : "failure"
+						}
+					});
+				});
+
+				it ("should invoke method and emit 'response' for lookup method.", function (done) {
+
+					agent.services["sample"] = {
+						name: "samle",
+						instance: new MockConnectorLookup()
+					};
+
+					server.on("response", function (data) {
+						assert.equal(10, data.id); 
+						assert.ok(!data.response.error);
+						assert.equal("result lookup bar 200", data.response.data);
+						done();
+					});
+
+					server.emit("invoke", {
+						id: 10, 
+						data: {
+							service: "sample",
+							method : "bar",
+							args   : "200"
 						}
 					});
 				});
