@@ -20,7 +20,12 @@ process.on('uncaughtException', function (err) {
 
 	if (err instanceof Error) err = Error.toJson(err);
 	winston.error (JSON.stringify(err, null, "  "));
-	process.exit();
+
+	if (agent) {
+		agent.stop(function() {
+			process.exit();
+		});
+	}
 });
 
 process.on('exit', function() {
@@ -44,14 +49,14 @@ agent.initialize(function (err) {
 
 			// Wait for a Ctrl+C to exit
 		    winston.info (os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
-
 			process.stdin.resume();
 			process.stdin.setRawMode(true);
 			process.stdin.on('keypress', function(char, key) {
 				if (key && key.ctrl && key.name == 'c') {
 					winston.info ("stopping agent instance");
-					agent.stop();
-					process.exit();
+					agent.stop(function() {
+						process.exit();
+					});
 				}
 			});
 		});
