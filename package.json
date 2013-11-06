@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "main": "./bin/server",
   "dependencies": {
     "keypress": "0.2.1",
@@ -13,7 +13,8 @@
     "simple-errors": "0.0.4",
     "join": "2.3.0",
     "socket.io-client": "0.9.16",
-    "socket.io-stream": "0.5.0"
+    "socket.io-stream": "0.5.0",
+    "read-installed": " 0.2.4"
   },
   "devDependencies": {
       "mocha": "1.11.0",

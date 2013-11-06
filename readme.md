@@ -19,4 +19,9 @@ Create a config.json file (you can copy and edit config.json.sample)
 
 Run the service executing:
 
-	node ./bin/server
+	node ./bin/server [--level error|warn|info|verbose|debug]
+
+If you are planning to link local connectors instead of installing specific connectors versions from [NPM](https://npmjs.org)'s registry, then you have to change the value of the NPM's preperty `prefix` to the path where nodejs was installed.
+
+	 npm config set prefix "c:\Program Files (x86)\nodejs"
+	 
