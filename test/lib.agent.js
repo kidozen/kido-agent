@@ -58,6 +58,17 @@ var mockNpm = {
 	}
 };
 
+var mockReadInstalled = function (dir, aux, aux2, cb) {
+	cb(null, {
+		dependencies: {
+			mockConnector: {
+				version: "0.0.1",
+				realPath: "mockConnector"
+			}
+		}
+	});
+};
+
 var AgentMockuired 	= mockuire("../lib/agent", {
 
 	"mockConnector": MockConnector,
@@ -67,7 +78,8 @@ var AgentMockuired 	= mockuire("../lib/agent", {
 	},
 	"socket.io-client":  {
 		connect: function() { return server; }
-	}
+	},
+	"read-installed": mockReadInstalled
 });
 
 var nock	= require("nock");
@@ -75,7 +87,7 @@ var assert	= require("assert");
 var Agent 	= require("../lib/agent.js");
 var winston	= require("winston");
 winston.clear();
-//winston.add(winston.transports.Console, {level: "debug"});
+//winston.add(winston.transports.Console, {level: "debug", colored: true});
 
 describe("Agent", function() {
 
