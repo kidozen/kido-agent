@@ -58,28 +58,22 @@ var mockNpm = {
 	}
 };
 
-var mockReadInstalled = function (dir, aux, aux2, cb) {
-	cb(null, {
-		dependencies: {
-			mockConnector: {
-				version: "0.0.1",
-				realPath: "mockConnector"
-			}
-		}
-	});
-};
-
 var AgentMockuired 	= mockuire("../lib/agent", {
 
 	"mockConnector": MockConnector,
 	"npm": mockNpm,
-	"./getAccessToken": function (marketplace, user, password, cb) { 
-		cb(null, "ipToken", "kidoToken");
-	},
 	"socket.io-client":  {
 		connect: function() { return server; }
 	},
-	"read-installed": mockReadInstalled
+	"./getAccessToken": function (marketplace, user, password, cb) { 
+		cb(null, "ipToken", "kidoToken");
+	},
+	"./getDependency": function (name, cb) {
+		cb(null, {
+			version: "0.0.1",
+			realPath: "mockConnector"
+		});
+	}
 });
 
 var nock	= require("nock");
@@ -306,7 +300,8 @@ describe("Agent", function() {
 
 			describe ("on 'addService'", function () {
 
-				it ("should install connector, start the service and emit 'serviceReady' event.", function (done) {					
+				it ("should install connector, start the service and emit 'serviceReady' event.", function (done) {
+
 					server
 						.on("serviceReady", function (data) {
 							assert.equal(1234, data.id); 
