@@ -1,3 +1,4 @@
+var path        = require("path");
 var mockuire 	= require("mockuire")(module);
 var server  	= new (require('events').EventEmitter)();
 server.send = function(name, data, timeout) { 
@@ -54,6 +55,10 @@ var mockNpm = {
 		link: function(args, cb) { 
 			var err = (args[0]==="mockConnector") ? null : new Error("NPM MOCK: Link failed.");
 			setTimeout(function(){ cb(err); }, 20); // simulates async behavior
+		},
+		config: function(args, cb) { 
+			var data = (args[0]==="get") ? path.dirname(process.execPath) : null;
+			setTimeout(function(){ cb(null, data); }, 20); // simulates async behavior
 		}
 	}
 };
