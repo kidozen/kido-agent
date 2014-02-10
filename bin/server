@@ -47,17 +47,13 @@ agent.initialize(function (err) {
 		agent.start(function (err) {
 			if (err) throw Error.create("Couldn't start agent instance.", err);
 
-			// Wait for a Ctrl+C to exit
+			// Wait for a Ctrl+C (SIGINT) to exit
 		    winston.info (os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
-			process.stdin.resume();
-			process.stdin.setRawMode(true);
-			process.stdin.on('keypress', function(char, key) {
-				if (key && key.ctrl && key.name == 'c') {
-					winston.info ("stopping agent instance");
-					agent.stop(function() {
-						process.exit();
-					});
-				}
+			process.on('SIGINT', function() {
+				winston.info ("stopping agent instance");
+				agent.stop(function() {
+					process.exit();
+				});
 			});
 		});
 	});
