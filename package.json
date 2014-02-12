@@ -4,7 +4,6 @@
   "version": "0.1.12",
   "main": "./bin/server",
   "dependencies": {
-    "keypress": "0.2.1",
     "express": "3.3.4",
     "winston": "0.7.2",
     "nconf": "0.6.7",
