@@ -7,6 +7,7 @@ var os		= require("os");
 var winston = require("winston");
 var agent 	= require("../lib/agent");
 var moment  = require('moment');
+var readLine = require ("readline");
 
 var level = process.argv.indexOf("--level");
 level = ((level > -1) ? process.argv[level + 1] : null) || "info"; 
@@ -49,6 +50,19 @@ agent.initialize(function (err) {
 		// starts the agent intance
 		agent.start(function (err) {
 			if (err) throw Error.create("Couldn't start agent instance.", err);
+
+			//Windows doesn't emit SIGNINT on CTRL+C
+			//We use readline to listen to that event
+			if (process.platform === "win32"){
+			    var rl = readLine.createInterface ({
+			        input: process.stdin,
+			        output: process.stdout
+			    });
+
+			    rl.on ("SIGINT", function (){
+			        process.emit ("SIGINT");
+			    });
+			}
 
 			// Wait for a Ctrl+C (SIGINT) to exit
 		    winston.info (os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
