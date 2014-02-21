@@ -22,7 +22,10 @@
       "mockuire": "0.0.3"
   },
   "scripts": {
-    "test": "mocha -R spec test"
+    "test": "mocha -R spec test",
+    "install-windows-service": "winser -i",
+    "uninstall-windows-service": "winser -r",
+    "start": "node bin/server"
   },
   "bin": {
     "kido-agent": "./bin/server"
