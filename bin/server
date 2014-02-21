@@ -14,7 +14,7 @@ level = ((level > -1) ? process.argv[level + 1] : null) || "info";
 winston.clear();
 winston.add(winston.transports.Console, 
 	{ colorize: true, level: level, 
-		'timestamp': function() {var m = new moment(); return m.format("(YYYY-MM-DD HH:mm)"); } });
+		'timestamp': function() {var m = new moment(); return m.format("YYYY-MM-DD HH:mm"); } });
 
 var keypress = require('keypress');
 keypress(process.stdin);
