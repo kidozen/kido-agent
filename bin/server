@@ -16,9 +16,6 @@ winston.add(winston.transports.Console,
 	{ colorize: true, level: level, 
 		'timestamp': function() {var m = new moment(); return m.format("YYYY-MM-DD HH:mm"); } });
 
-var keypress = require('keypress');
-keypress(process.stdin);
-
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
 
