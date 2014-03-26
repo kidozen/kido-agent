@@ -6,6 +6,7 @@ server.send = function(name, data, timeout) {
 	setTimeout(function() { server.emit(name, data); }, timeout || 10);
 };
 
+server.socket = { transport: { websocket: { _socket: { socket : { setKeepAlive: function () {} } } } } };
 
 var MockConnector = function (settings) {
 	if (settings && settings.fail) throw new Error("Invalid connector configuration.");

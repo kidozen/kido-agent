@@ -2,34 +2,43 @@
 
 // Module's dependencies 
 require("simple-errors");
+require("../lib/customizeWinston");
 
-var os		= require("os");
-var winston = require("winston");
-var agent 	= require("../lib/agent");
-var moment  = require('moment');
-var readLine = require ("readline");
+var os			= require("os");
+var winston 	= require("winston");
+var readLine 	= require ("readline");
+var agent 		= require("../lib/agent");
 
-var level = process.argv.indexOf("--level");
-level = ((level > -1) ? process.argv[level + 1] : null) || "info"; 
-winston.clear();
-winston.add(winston.transports.Console, 
-	{ colorize: true, level: level, 
-		'timestamp': function() {var m = new moment(); return m.format("YYYY-MM-DD HH:mm"); } });
+process.title = "kido-agent";
+
+winston.info("node version", process.version);
+winston.info("process title", process.title);
+winston.info("process platform", process.platform);
+winston.info("process arch", process.arch);
+winston.info("os platform", os.platform());
+winston.info("os arch", os.arch());
 
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
 
-	if (err instanceof Error) err = Error.toJson(err);
-	winston.error (JSON.stringify(err, null, "  "));
+	winston.error ("An error ocurred.", err);
 
 	if (agent) {
 		agent.stop(function() {
-			process.exit();
+			process.exit(process.exitCode);
 		});
 	}
 });
 
+process.exitCode = 1;
 process.on('exit', function() {
+	if (process.exitCode!==0) {
+		winston.error();
+		winston.error();
+		winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
+		winston.error();
+		winston.error();
+	};
     winston.info ("bye!");
 });
 
@@ -38,15 +47,15 @@ var agent = new Agent();
 
 // initializes the agent instance
 agent.initialize(function (err) {
-	if (err) throw Error.create("Couldn't initialize agent instance.", err);
+	if (err) return winston.error("Couldn't initialize agent instance.", err);
 
 	// authenticates the agent against kidozen using configured credentials
 	agent.authenticate(function (err) {
-		if (err) throw Error.create("Couldn't authenticate the agent instance against KidoZen services.", err);
+		if (err) return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
 
 		// starts the agent intance
 		agent.start(function (err) {
-			if (err) throw Error.create("Couldn't start agent instance.", err);
+			if (err) return winston.error("Couldn't start agent instance.", err);
 
 			//Windows doesn't emit SIGNINT on CTRL+C
 			//We use readline to listen to that event
@@ -66,9 +75,11 @@ agent.initialize(function (err) {
 			process.on('SIGINT', function() {
 				winston.info ("stopping agent instance");
 				agent.stop(function() {
+					process.exitCode = 0;
 					process.exit();
 				});
 			});
 		});
 	});
 });
+
