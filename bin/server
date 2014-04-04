@@ -8,11 +8,13 @@ var os			= require("os");
 var winston 	= require("winston");
 var readLine 	= require ("readline");
 var agent 		= require("../lib/agent");
+var pkg			= require("../package.json");
 
-process.title = "kido-agent";
+process.title = pkg.name;
 
 winston.info("node version", process.version);
 winston.info("process title", process.title);
+winston.info("process version", pkg.version);
 winston.info("process platform", process.platform);
 winston.info("process arch", process.arch);
 winston.info("os platform", os.platform());
