@@ -44,6 +44,13 @@ process.on('exit', function() {
     winston.info ("bye!");
 });
 
+
+if (process.argv.indexOf("--version") > -1) {
+	process.exitCode = 0;
+	process.exit(0);
+	return;
+}
+
 // creates an agent instance
 var agent = new Agent();
 
