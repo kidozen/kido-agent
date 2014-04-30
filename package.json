@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.30",
+  "version": "0.1.31",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [ 
