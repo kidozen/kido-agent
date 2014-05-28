@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [ 
@@ -19,7 +19,7 @@
     "winston": "0.7.2",
     "nconf": "0.6.7",
     "request": "2.25.0",
-    "npm": "1.4.12",
+    "npm": "1.4.6",
     "simple-errors": "0.0.4",
     "join": "2.3.0",
     "socket.io-client": "0.9.16",
