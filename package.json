@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [ 
@@ -12,6 +12,10 @@
       {
       "name": "Hernán Tierno",
       "email": "hernan.tierno@kidozen.com"
+      },
+      {
+        "name": "Alejandro Oviedo",
+        "email": "alejandro.oviedo@kidozen.com"
       }  
   ],
   "dependencies": {
