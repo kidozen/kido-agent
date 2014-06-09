@@ -5,10 +5,11 @@ require("simple-errors");
 require("../lib/customizeWinston");
 
 var os			= require("os");
-var winston 	= require("winston");
-var readLine 	= require ("readline");
-var agent 		= require("../lib/agent");
+var winston     = require("winston");
+var readLine    = require ("readline");
+var agent       = require("../lib/agent");
 var pkg			= require("../package.json");
+var timeout;
 
 process.title = pkg.name;
 
@@ -23,72 +24,85 @@ winston.info("os arch", os.arch());
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
 
-	winston.error ("An error ocurred.", err);
+    winston.error("An error ocurred.", err);
 
-	if (agent) {
-		agent.stop(function() {
-			process.exit(process.exitCode);
-		});
-	}
+    if (agent) {
+        agent.stop(function () {
+            process.exit(process.exitCode);
+        });
+    }
 });
 
 process.exitCode = 1;
-process.on('exit', function() {
-	if (process.exitCode!==0) {
-		winston.error();
-		winston.error();
-		winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-		winston.error();
-		winston.error();
-	};
-    winston.info ("bye!");
+process.on('exit', function () {
+    if (process.exitCode !== 0) {
+        winston.error();
+        winston.error();
+        winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
+        winston.error();
+        winston.error();
+    }
+    winston.info("bye!");
 });
-
 
 if (process.argv.indexOf("--version") > -1) {
-	process.exitCode = 0;
-	process.exit(0);
-	return;
+    process.exitCode = 0;
+    process.exit(0);
+    return;
 }
 
-// creates an agent instance
-var agent = new Agent();
+initialize();
 
-// initializes the agent instance
-agent.initialize(function (err) {
-	if (err) return winston.error("Couldn't initialize agent instance.", err);
+function initialize() {
+    // creates an agent instance
+    agent = new Agent();
+    agent.on("connect", function () {
+        clearTimeout(timeout);
+        timeout = undefined;
+    });
+    agent.on("disconnect", function () {
+        //just a safety measure
+        if (!timeout) {
+            timeout = setTimeout(function () {
+                initialize();
+            }, 30000);
+        }
+    });
+    agent.initialize(function (err) {
+        if (err) return winston.error("Couldn't initialize agent instance.", err);
 
-	// authenticates the agent against kidozen using configured credentials
-	agent.authenticate(function (err) {
-		if (err) return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
+        // authenticates the agent against kidozen using configured credentials
+        agent.authenticate(function (err) {
+            if (err) return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
 
-		// starts the agent intance
-		agent.start(function (err) {
-			if (err) return winston.error("Couldn't start agent instance.", err);
+            // starts the agent intance
+            agent.start(function (err) {
+                if (err) return winston.error("Couldn't start agent instance.", err);
 
-			//Windows doesn't emit SIGNINT on CTRL+C
-			//We use readline to listen to that event
-			if (process.platform === "win32"){
-			    var rl = readLine.createInterface ({
-			        input: process.stdin,
-			        output: process.stdout
-			    });
+                //Windows doesn't emit SIGNINT on CTRL+C
+                //We use readline to listen to that event
+                if (process.platform === "win32") {
+                    var rl = readLine.createInterface({
+                        input: process.stdin,
+                        output: process.stdout
+                    });
 
-			    rl.on ("SIGINT", function (){
-			        process.emit ("SIGINT");
-			    });
-			}
+                    rl.on("SIGINT", function () {
+                        process.emit("SIGINT");
+                    });
+                }
 
-			// Wait for a Ctrl+C (SIGINT) to exit
-		    winston.info (os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
-			process.on('SIGINT', function() {
-				winston.info ("stopping agent instance");
-				agent.stop(function() {
-					process.exitCode = 0;
-					process.exit();
-				});
-			});
-		});
-	});
-});
+                // Wait for a Ctrl+C (SIGINT) to exit
+                winston.info(os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
+                process.on('SIGINT', function () {
+                    winston.info("stopping agent instance");
+                    agent.stop(function () {
+                        process.exitCode = 0;
+                        process.exit();
+                    });
+                });
+            });
+        });
+    });
+}
 
