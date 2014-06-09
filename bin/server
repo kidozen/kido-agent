@@ -53,27 +53,36 @@ if (process.argv.indexOf("--version") > -1) {
 
 initialize();
 
+function watchAgent() {
+    "use strict";
+    //just a safety measure
+    if (!timeout) {
+        timeout = setInterval(function () {
+            winston.info('Creating a new instance of the agent.');
+            initialize();
+        }, 300000);
+    }
+}
+
 function initialize() {
     // creates an agent instance
     agent = new Agent();
     agent.on("connect", function () {
-        clearTimeout(timeout);
+        clearInterval(timeout);
         timeout = undefined;
     });
     agent.on("disconnect", function () {
-        //just a safety measure
-        if (!timeout) {
-            timeout = setTimeout(function () {
-                initialize();
-            }, 30000);
-        }
+        watchAgent();
     });
     agent.initialize(function (err) {
         if (err) return winston.error("Couldn't initialize agent instance.", err);
 
         // authenticates the agent against kidozen using configured credentials
         agent.authenticate(function (err) {
-            if (err) return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
+            if (err) {
+                watchAgent();
+                return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
+            }
 
             // starts the agent intance
             agent.start(function (err) {
