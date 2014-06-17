@@ -1,113 +1,113 @@
 #!/usr/bin/env node
+'use strict';
+var fs          = require('fs');
+var os          = require('os');
+var exec        = require('child_process').exec;
+var spawn       = require('child_process').spawn;
+var read        = require('read');
+var path        = require('path');
 
-// Module's dependencies 
-require("simple-errors");
-require("../lib/customizeWinston");
+var param = process.argv[2];
+var configFileName          = 'config.json';
+var linuxBashFileName       = 'installService.sh';
 
-var os			= require("os");
-var winston     = require("winston");
-var readLine    = require ("readline");
-var agent       = require("../lib/agent");
-var pkg			= require("../package.json");
-var timeout;
-
-process.title = pkg.name;
-
-winston.info("node version", process.version);
-winston.info("process title", process.title);
-winston.info("process version", pkg.version);
-winston.info("process platform", process.platform);
-winston.info("process arch", process.arch);
-winston.info("os platform", os.platform());
-winston.info("os arch", os.arch());
-
-// Catch any unhandled exception
-process.on('uncaughtException', function (err) {
-
-    winston.error("An error ocurred.", err);
-
-    if (agent) {
-        agent.stop(function () {
-            process.exit(process.exitCode);
-        });
-    }
-});
-
-process.exitCode = 1;
-process.on('exit', function () {
-    if (process.exitCode !== 0) {
-        winston.error();
-        winston.error();
-        winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-        winston.error();
-        winston.error();
-    }
-    winston.info("bye!");
-});
-
-if (process.argv.indexOf("--version") > -1) {
-    process.exitCode = 0;
-    process.exit(0);
-    return;
+switch (param) {
+    case 'init':
+        init();
+        break;
+    case 'run':
+        run();
+        break;
+    case 'install-service':
+        installService();
+        break;
+    case 'uninstall-service':
+        uninstallService();
+        break;
+    default:
+        run();
 }
 
-initialize();
-
-function watchAgent() {
-    "use strict";
-    //just a safety measure
-    if (!timeout) {
-        timeout = setInterval(function () {
-            winston.info('Creating a new instance of the agent.');
-            initialize();
-        }, 300000);
-    }
+function formatDefaults(str) {
+    // replaces any '(' or ')' occurrences with ''
+    return str.replace(/\(|\)/g, '');
 }
 
-function initialize() {
-    // creates an agent instance
-    agent = new Agent();
-    agent.on("connect", function () {
-        clearInterval(timeout);
-        timeout = undefined;
+function getConfigFile(cb) {
+    fs.readFile(configFileName, function (err, data) {
+        cb(err, data ? JSON.parse(data.toString()) : {});
     });
-    agent.on("disconnect", function () {
-        watchAgent();
-    });
-    agent.initialize(function (err) {
-        if (err) return winston.error("Couldn't initialize agent instance.", err);
+}
 
-        // authenticates the agent against kidozen using configured credentials
-        agent.authenticate(function (err) {
-            if (err) {
-                watchAgent();
-                return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
+function init() {
+    var config = {
+        name: '',
+        credentials: {
+            user: '',
+            password: '',
+            marketplace: ''
+        }
+    };
+    var defaultName,
+        defaultUser,
+        defaultPassword,
+        defaultMarketplace;
+    // check if the config.json exists
+    getConfigFile(function (err, prevConfig) {
+        if (err && err.code !== 'ENOENT') {
+            console.error(err);
+            return;
+        }
+
+        if (prevConfig && prevConfig.name) {
+            defaultName = '(' + prevConfig.name + ')';
+        }
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.user) {
+            defaultUser = '(' + prevConfig.credentials.user + ')';
+        }
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.password) {
+            defaultPassword = '(' + prevConfig.credentials.password + ')';
+        }
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.marketplace) {
+            defaultMarketplace = '(' + prevConfig.credentials.marketplace + ')';
+        }
+        read({prompt: 'Name' + defaultName + ':'}, function (err, name) {
+            if (!name && defaultName) {
+                config.name = formatDefaults(defaultName);
+            } else {
+                config.name = name;
             }
 
-            // starts the agent intance
-            agent.start(function (err) {
-                if (err) return winston.error("Couldn't start agent instance.", err);
-
-                //Windows doesn't emit SIGNINT on CTRL+C
-                //We use readline to listen to that event
-                if (process.platform === "win32") {
-                    var rl = readLine.createInterface({
-                        input: process.stdin,
-                        output: process.stdout
-                    });
-
-                    rl.on("SIGINT", function () {
-                        process.emit("SIGINT");
-                    });
+            read({prompt: 'User' + defaultUser + ':'}, function (err, user) {
+                if (!user && defaultUser) {
+                    config.credentials.user = formatDefaults(defaultUser);
+                } else {
+                    config.credentials.user = user;
                 }
 
-                // Wait for a Ctrl+C (SIGINT) to exit
-                winston.info(os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
-                process.on('SIGINT', function () {
-                    winston.info("stopping agent instance");
-                    agent.stop(function () {
-                        process.exitCode = 0;
-                        process.exit();
+                read({prompt: 'Password:', silent: true}, function (err, pass) {
+                    if (!pass && defaultPassword) {
+                        config.credentials.password = formatDefaults(defaultPassword);
+                    } else {
+                        config.credentials.password = pass;
+                    }
+
+                    read({prompt: 'Marketplace' + defaultMarketplace + ':'}, function (err, marketplace) {
+                        if (!marketplace && defaultMarketplace) {
+                            config.credentials.marketplace = formatDefaults(defaultMarketplace);
+                        } else {
+                            config.credentials.marketplace = marketplace;
+                        }
+
+                        console.log(config);
+                        fs.writeFile(configFileName, JSON.stringify(config), function (err) {
+                            if (err) {
+                                console.error(err);
+                                return;
+                            }
+
+                            console.log('Config file saved successfully.');
+                        });
                     });
                 });
             });
@@ -115,3 +115,133 @@ function initialize() {
     });
 }
 
+function run() {
+    var server;
+    server = spawn('node', [path.resolve(__dirname, './process')]);
+    server.stdout.on('data', function (data) {
+        console.log(data.toString());
+    });
+    server.stderr.on('data', function (data) {
+        console.log(data.toString());
+    });
+}
+
+function installService() {
+    getConfigFile(function (err, config) {
+        if (os.platform() === 'linux') {
+            var uid = parseInt(process.env.SUDO_UID);
+            //check for sudo
+            if (!uid) {
+                console.log('Root permissions are needed.');
+                return;
+            }
+
+            fs.readFile(linuxBashFileName, function (err, bashFile) {
+                var service = bashFile.toString().replace(/kido-agent/g, config.name)
+                    .replace(/current-dir/g, process.cwd());
+
+                fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
+                    if (err) {
+                        console.log('An error occurred while trying to save the bash file:' + err);
+                        return;
+                    }
+                    fs.chmod('/etc/init.d/' + config.name, 755, function (err) {
+                        if (err) {
+                            console.log('An error occurred while trying to install the service:' + err);
+                            return;
+                        }
+
+                        exec('update-rc.d ' + config.name + ' defaults', function (err, stdout, stderr) {
+                            if (err) {
+                                console.log('An error occurred while trying to install the service:' + err);
+                                return;
+                            }
+                            console.log('Service installed successfully');
+                        });
+                    });
+                });
+            });
+        }
+
+        if (os.platform() === 'win32') {
+            exec('npm config get prefix', function (err, stdout, stderr) {
+                var nssm, command;
+                if (err) {
+                    console.log('An error occurred while trying to install the service:' + err);
+                    return;
+                }
+                if (os.arch() === 'ia32') {
+                    nssm = path.resolve(__dirname, './nssm32.exe');
+                } else {
+                    nssm = path.resolve(__dirname, './nssm64.exe');
+                }
+                command = nssm + ' install ' + config.name +
+                    ' "' + process.execPath + '" "' + path.resolve(__dirname, './process') + '"';
+                exec(command, function (err) {
+                    if (err) {
+                        console.log('An error occurred while trying to install the service:' + err);
+                        return;
+                    }
+
+                    command = nssm + ' set ' + config.name + ' AppDirectory ' + process.cwd();
+                    exec(command, function (err) {
+                        if (err) {
+                            console.log('An error occurred while trying to install the service:' + err);
+                            return;
+                        }
+                        console.log('Service installed successfully');
+                    });
+                });
+            });
+        }
+    });
+}
+
+function uninstallService() {
+    getConfigFile(function (err, config) {
+        var command;
+        if (err) {
+            console.log('Config file not found. Run kido-agent init to create one.');
+            return;
+        }
+        if (os.platform() === 'linux') {
+            var uid = parseInt(process.env.SUDO_UID);
+            // check for sudo
+            if (!uid) {
+                console.log('Root permissions are needed.');
+                return;
+            }
+            exec('update-rc.d -f ' + config.name + ' remove', function (err, stdout, stderr) {
+                if (err) {
+                    console.log('An error occurred while trying to remove the service:' + err);
+                    return;
+                }
+
+                exec('rm /etc/init.d/' + config.name, function (err, stdout, stderr) {
+                    if (err) {
+                        console.log('An error occurred while trying to remove the service:' + err);
+                        return;
+                    }
+                    console.log('Service installed successfully');
+                });
+            });
+        }
+
+        if (os.platform() === 'win32') {
+            // nssm magic
+            if (os.arch() === 'ia32') {
+                command = path.resolve(__dirname, './nssm32.exe');
+            } else {
+                command = path.resolve(__dirname, './nssm64.exe');
+            }
+            command = command + ' remove ' + config.name + ' confirm';
+            exec(command, function (err) {
+                if (err) {
+                    console.log('An error occurred while trying to remove the service:' + err);
+                    return;
+                }
+                console.log('Service removed successfully');
+            });
+        }
+    });
+}
