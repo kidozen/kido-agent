@@ -48,10 +48,10 @@ function init() {
             marketplace: ''
         }
     };
-    var defaultName,
-        defaultUser,
-        defaultPassword,
-        defaultMarketplace;
+    var defaultName = '',
+        defaultUser = '',
+        defaultPassword = ''
+        defaultMarketplace = '';
     // check if the config.json exists
     getConfigFile(function (err, prevConfig) {
         if (err && err.code !== 'ENOENT') {
