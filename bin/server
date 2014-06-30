@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 'use strict';
+
+require("../lib/customizeWinston");
+
 var fs          = require('fs');
 var os          = require('os');
 var exec        = require('child_process').exec;
 var spawn       = require('child_process').spawn;
 var read        = require('read');
 var path        = require('path');
+var readLine    = require ("readline");
+var winston     = require("winston");
 
 var param = process.argv[2];
 var configFileName          = 'config.json';
@@ -116,13 +121,43 @@ function init() {
 }
 
 function run() {
-    var server;
-    server = spawn('node', [path.resolve(__dirname, './process')]);
+    var server, args = process.argv.slice(2,process.argv.length);
+    args.unshift(path.resolve(__dirname, './process'));
+    server = spawn('node', args);
     server.stdout.on('data', function (data) {
         console.log(data.toString());
     });
     server.stderr.on('data', function (data) {
         console.log(data.toString());
+    });
+
+    if (process.platform === "win32") {
+        var rl = readLine.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
+        rl.on("SIGINT", function () {
+            process.emit("SIGINT");
+        });
+    }
+
+    // Wait for a Ctrl+C (SIGINT) to exit
+    winston.info(os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
+    process.on('SIGINT', function () {
+        winston.info("stopping agent instance");
+    });
+
+    process.exitCode = 1;
+    process.on('exit', function () {
+        if (process.exitCode !== 0) {
+            winston.error();
+            winston.error();
+            winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
+            winston.error();
+            winston.error();
+        }
+        winston.info("bye!");
     });
 }
 
@@ -245,3 +280,5 @@ function uninstallService() {
         }
     });
 }
+
+
