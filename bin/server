@@ -50,7 +50,7 @@ function init() {
     };
     var defaultName = '',
         defaultUser = '',
-        defaultPassword = ''
+        defaultPassword = '',
         defaultMarketplace = '';
     // check if the config.json exists
     getConfigFile(function (err, prevConfig) {
