@@ -60,7 +60,7 @@ function init() {
     // check if the config.json exists
     getConfigFile(function (err, prevConfig) {
         if (err && err.code !== 'ENOENT') {
-            console.error(err);
+            winston.error(err);
             return;
         }
 
@@ -104,14 +104,13 @@ function init() {
                             config.credentials.marketplace = marketplace;
                         }
 
-                        console.log(config);
                         fs.writeFile(configFileName, JSON.stringify(config), function (err) {
                             if (err) {
-                                console.error(err);
+                                winston.error(err);
                                 return;
                             }
 
-                            console.log('Config file saved successfully.');
+                            winston.info('Config file saved successfully.');
                         });
                     });
                 });
@@ -125,10 +124,10 @@ function run() {
     args.unshift(path.resolve(__dirname, './process'));
     server = spawn('node', args);
     server.stdout.on('data', function (data) {
-        console.log(data.toString());
+        winston.info(data.toString());
     });
     server.stderr.on('data', function (data) {
-        console.log(data.toString());
+        winston.info(data.toString());
     });
 
     if (process.platform === "win32") {
@@ -169,7 +168,7 @@ function installService() {
             var uid = parseInt(process.env.SUDO_UID);
             //check for sudo
             if (!uid) {
-                console.log('Root permissions are needed.');
+                winston.error('Root permissions are needed.');
                 return;
             }
 
@@ -179,21 +178,21 @@ function installService() {
 
                 fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
                     if (err) {
-                        console.log('An error occurred while trying to save the bash file:' + err);
+                        winston.error('An error occurred while trying to save the bash file:' + err);
                         return;
                     }
                     fs.chmod('/etc/init.d/' + config.name, 755, function (err) {
                         if (err) {
-                            console.log('An error occurred while trying to install the service:' + err);
+                            winston.error('An error occurred while trying to install the service:' + err);
                             return;
                         }
 
                         exec('update-rc.d ' + config.name + ' defaults', function (err, stdout, stderr) {
                             if (err) {
-                                console.log('An error occurred while trying to install the service:' + err);
+                                winston.error('An error occurred while trying to install the service:' + err);
                                 return;
                             }
-                            console.log('Service installed successfully');
+                            winston.info('Service installed successfully');
                         });
                     });
                 });
@@ -204,7 +203,7 @@ function installService() {
             exec('npm config get prefix', function (err, stdout, stderr) {
                 var nssm, command;
                 if (err) {
-                    console.log('An error occurred while trying to install the service:' + err);
+                    winston.error('An error occurred while trying to install the service:' + err);
                     return;
                 }
                 if (os.arch() === 'ia32') {
@@ -216,17 +215,17 @@ function installService() {
                     ' "' + process.execPath + '" "' + path.resolve(__dirname, './process') + '"';
                 exec(command, function (err) {
                     if (err) {
-                        console.log('An error occurred while trying to install the service:' + err);
+                        winston.error('An error occurred while trying to install the service:' + err);
                         return;
                     }
 
                     command = nssm + ' set ' + config.name + ' AppDirectory ' + process.cwd();
                     exec(command, function (err) {
                         if (err) {
-                            console.log('An error occurred while trying to install the service:' + err);
+                            winston.error('An error occurred while trying to install the service:' + err);
                             return;
                         }
-                        console.log('Service installed successfully');
+                        winston.info('Service installed successfully');
                     });
                 });
             });
@@ -237,29 +236,29 @@ function installService() {
 function uninstallService() {
     getConfigFile(function (err, config) {
         var command;
-        if (err) {
-            console.log('Config file not found. Run kido-agent init to create one.');
+        if (err || !config.name) {
+            winston.error('Config file not found. Run kido-agent init to create one.');
             return;
         }
         if (os.platform() === 'linux') {
             var uid = parseInt(process.env.SUDO_UID);
             // check for sudo
             if (!uid) {
-                console.log('Root permissions are needed.');
+                winston.error('Root permissions are needed.');
                 return;
             }
             exec('update-rc.d -f ' + config.name + ' remove', function (err, stdout, stderr) {
                 if (err) {
-                    console.log('An error occurred while trying to remove the service:' + err);
+                    winston.error('An error occurred while trying to remove the service:' + err);
                     return;
                 }
 
                 exec('rm /etc/init.d/' + config.name, function (err, stdout, stderr) {
                     if (err) {
-                        console.log('An error occurred while trying to remove the service:' + err);
+                        winston.error('An error occurred while trying to remove the service:' + err);
                         return;
                     }
-                    console.log('Service installed successfully');
+                    winston.info('Service installed successfully');
                 });
             });
         }
@@ -274,10 +273,10 @@ function uninstallService() {
             command = command + ' remove ' + config.name + ' confirm';
             exec(command, function (err) {
                 if (err) {
-                    console.log('An error occurred while trying to remove the service:' + err);
+                    winston.error('An error occurred while trying to remove the service:' + err);
                     return;
                 }
-                console.log('Service removed successfully');
+                winston.info('Service removed successfully');
             });
         }
     });
