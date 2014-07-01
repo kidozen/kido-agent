@@ -5,12 +5,16 @@ require("../lib/customizeWinston");
 
 var fs          = require('fs');
 var os          = require('os');
-var exec        = require('child_process').exec;
 var spawn       = require('child_process').spawn;
 var read        = require('read');
 var path        = require('path');
 var readLine    = require ("readline");
 var winston     = require("winston");
+
+var exec = function(cmd, cb){
+    winston.debug('Executing command: "' + cmd + '"');
+    require('child_process').exec(cmd, cb);
+};
 
 var param = process.argv[2];
 var configFileName          = 'config.json';
@@ -149,6 +153,12 @@ function run() {
         process.exit();
     });
 
+    process.on('SIGTERM', function () {
+        winston.info("stopping agent instance");
+        process.exitCode = 0;
+        process.exit();
+    });
+
     process.exitCode = 1;
     process.on('exit', function () {
         if (process.exitCode !== 0) {
@@ -270,13 +280,19 @@ function uninstallService() {
             } else {
                 command = path.resolve(__dirname, './nssm64.exe');
             }
-            command = command + ' remove ' + config.name + ' confirm';
-            exec(command, function (err) {
-                if (err) {
+            exec(command + ' stop ' + config.name + ' confirm', function(err){
+                if(err) {
                     winston.error('An error occurred while trying to remove the service:' + err);
                     return;
                 }
-                winston.info('Service removed successfully');
+                command = command + ' remove ' + config.name + ' confirm';
+                exec(command, function (err) {
+                    if (err) {
+                        winston.error('An error occurred while trying to remove the service:' + err);
+                        return;
+                    }
+                    winston.info('Service removed successfully');
+                });
             });
         }
     });
