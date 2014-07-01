@@ -146,6 +146,8 @@ function run() {
     winston.info(os.EOL + os.EOL + 'Press Control-C to exit.' + os.EOL + os.EOL);
     process.on('SIGINT', function () {
         winston.info("stopping agent instance");
+        process.exitCode = 0;
+        process.exit();
     });
 
     process.exitCode = 1;
