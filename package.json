@@ -31,7 +31,7 @@
     "read-installed": "0.0.4",
     "json-stringify-safe": "5.0.0",
     "moment": "2.5.1",
-    "read": "~1.0.5"
+    "prompt": "0.2.13"
   },
   "devDependencies": {
     "mocha": "1.11.0",

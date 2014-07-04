@@ -6,10 +6,10 @@ require("../lib/customizeWinston");
 var fs          = require('fs');
 var os          = require('os');
 var spawn       = require('child_process').spawn;
-var read        = require('read');
 var path        = require('path');
-var readLine    = require ("readline");
+var readLine    = require("readline");
 var winston     = require("winston");
+var prompt      = require('prompt');
 
 var exec = function(cmd, cb){
     winston.debug('Executing command: "' + cmd + '"');
@@ -35,11 +35,6 @@ switch (param) {
         break;
     default:
         run();
-}
-
-function formatDefaults(str) {
-    // replaces any '(' or ')' occurrences with ''
-    return str.replace(/\(|\)/g, '');
 }
 
 function getConfigFile(cb) {
@@ -69,59 +64,64 @@ function init() {
         }
 
         if (prevConfig && prevConfig.name) {
-            defaultName = '(' + prevConfig.name + ')';
+            defaultName = prevConfig.name;
         }
         if (prevConfig && prevConfig.credentials && prevConfig.credentials.user) {
-            defaultUser = '(' + prevConfig.credentials.user + ')';
+            defaultUser = prevConfig.credentials.user;
         }
         if (prevConfig && prevConfig.credentials && prevConfig.credentials.password) {
-            defaultPassword = '(' + prevConfig.credentials.password + ')';
+            defaultPassword = prevConfig.credentials.password;
         }
         if (prevConfig && prevConfig.credentials && prevConfig.credentials.marketplace) {
-            defaultMarketplace = '(' + prevConfig.credentials.marketplace + ')';
+            defaultMarketplace = prevConfig.credentials.marketplace;
         }
-        read({prompt: 'Name' + defaultName + ':'}, function (err, name) {
-            if (!name && defaultName) {
-                config.name = formatDefaults(defaultName);
-            } else {
-                config.name = name;
-            }
 
-            read({prompt: 'User' + defaultUser + ':'}, function (err, user) {
-                if (!user && defaultUser) {
-                    config.credentials.user = formatDefaults(defaultUser);
-                } else {
-                    config.credentials.user = user;
+        var schema = {
+            properties: {
+                name: {
+                    pattern: /^[a-zA-Z0-9\-]+$/,
+                    message: 'Name must be only letters, numbers or dashes',
+                    type: 'string',
+                    default: defaultName,
+                    required: true
+                },
+                user: {
+                    type: 'string',
+                    default: defaultUser,
+                    required: true
+                },
+                password: {
+                    type: 'string',
+                    default: defaultPassword,
+                    hidden: true
+                },
+                marketplace: {
+                    type: 'string',
+                    default: defaultMarketplace,
+                    required: true
                 }
+            }
+        };
 
-                read({prompt: 'Password:', silent: true}, function (err, pass) {
-                    if (!pass && defaultPassword) {
-                        config.credentials.password = formatDefaults(defaultPassword);
-                    } else {
-                        config.credentials.password = pass;
-                    }
+        prompt.start();
 
-                    read({prompt: 'Marketplace' + defaultMarketplace + ':'}, function (err, marketplace) {
-                        if (!marketplace && defaultMarketplace) {
-                            config.credentials.marketplace = formatDefaults(defaultMarketplace);
-                        } else {
-                            config.credentials.marketplace = marketplace;
-                        }
+        prompt.get(schema, function (err, result) {
+            if (err)  return winston.error(err);
 
-                        fs.writeFile(configFileName, JSON.stringify(config), function (err) {
-                            if (err) {
-                                winston.error(err);
-                                return;
-                            }
+            config.name = result.name;
+            config.credentials.user = result.user;
+            config.credentials.password = result.password;
+            config.credentials.marketplace = result.marketplace;
 
-                            winston.info('Config file saved successfully.');
-                        });
-                    });
-                });
+            fs.writeFile(configFileName, JSON.stringify(config, null, "  "), function (err) {
+                if (err)  return winston.error(err);
+
+                winston.info('Config file saved successfully.');
             });
         });
     });
 }
+
 
 function run() {
     var server, args = process.argv.slice(2,process.argv.length);
