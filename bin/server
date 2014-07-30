@@ -220,8 +220,8 @@ function installService() {
                 }
                 nssm = getNSSMPath(os.arch());
                 command = nssm + ' install ' + config.name +' "' + 
-                    process.execPath + '" "' + 
-                    path.resolve(__dirname, './process').replace(/ /g, '^ ') + '"';
+                    process.execPath + '" \\"' + 
+                    path.resolve(__dirname, './process') + '\\"';
                 exec(command, function (err) {
                     if (err) {
                         winston.error('An error occurred while trying to install the service:' + err);
