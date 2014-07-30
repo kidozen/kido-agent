@@ -102,7 +102,6 @@ function init() {
                 }
             }
         };
-
         prompt.start();
 
         prompt.get(schema, function (err, result) {
@@ -115,7 +114,6 @@ function init() {
 
             fs.writeFile(configFileName, JSON.stringify(config, null, "  "), function (err) {
                 if (err)  return winston.error(err);
-
                 winston.info('Config file saved successfully.');
             });
         });
@@ -220,11 +218,7 @@ function installService() {
                     winston.error('An error occurred while trying to install the service:' + err);
                     return;
                 }
-                if (os.arch() === 'ia32') {
-                    nssm = path.resolve(__dirname, './nssm32.exe');
-                } else {
-                    nssm = path.resolve(__dirname, './nssm64.exe');
-                }
+                nssm = getNSSMPath(os.arch());
                 command = nssm + ' install ' + config.name +
                     ' "' + process.execPath + '" "' + path.resolve(__dirname, './process') + '"';
                 exec(command, function (err) {
@@ -279,11 +273,7 @@ function uninstallService() {
 
         if (os.platform() === 'win32') {
             // nssm magic
-            if (os.arch() === 'ia32') {
-                command = path.resolve(__dirname, './nssm32.exe');
-            } else {
-                command = path.resolve(__dirname, './nssm64.exe');
-            }
+            command = getNSSMPath(os.arch());
             exec(command + ' stop ' + config.name + ' confirm', function(err){
                 if(err) {
                     winston.error('An error occurred while trying to remove the service:' + err);
@@ -302,4 +292,10 @@ function uninstallService() {
     });
 }
 
-
+function getNSSMPath(arch) {
+    if (arch === 'ia32') {
+        return '"' + path.resolve(__dirname, './nssm32.exe') + '"';
+    } else {
+        return '"' + path.resolve(__dirname, './nssm64.exe') + '"';
+    }    
+}

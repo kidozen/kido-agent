@@ -24,12 +24,14 @@ winston.info("os arch", os.arch());
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
 
-    winston.error("An error ocurred.", err);
+    winston.error("An error ocurred.", err.message);
 
     if (agent) {
         agent.stop(function () {
             process.exit(process.exitCode);
         });
+    } else {
+        process.exit(1);
     }
 });
 
