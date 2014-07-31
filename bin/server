@@ -11,14 +11,34 @@ var readLine    = require("readline");
 var winston     = require("winston");
 var prompt      = require('prompt');
 
-var exec = function(cmd, cb){
+var exec = function (cmd, cb) {
     winston.debug('Executing command: "' + cmd + '"');
     require('child_process').exec(cmd, cb);
 };
 
 var param = process.argv[2];
-var configFileName          = 'config.json';
-var linuxBashFileName       = 'installService.sh';
+var configFileName      = 'config.json';
+var linuxBashFileName   = 'installService.sh';
+
+
+if (process.argv.indexOf("--version") > -1) {
+    winston.info('Version: ' +
+        require(path.resolve(__dirname, '../package.json')).version);
+    process.exitCode = 0;
+    process.exit(0);
+    return;
+}
+
+if (process.argv.indexOf("--help") > -1) {
+    winston.info('List of commands:');
+    winston.info('init');
+    winston.info('run');
+    winston.info('install-service');
+    winston.info('uninstall-service');
+    process.exitCode = 0;
+    process.exit(0);
+    return;
+}
 
 switch (param) {
     case 'init':
@@ -33,8 +53,15 @@ switch (param) {
     case 'uninstall-service':
         uninstallService();
         break;
-    default:
+    case undefined:
         run();
+        break;
+    default:
+        unknownCommand();
+}
+
+function unknownCommand() {
+    winston.info('Unknown command was specified. Exitting.');
 }
 
 function getConfigFile(cb) {
@@ -122,14 +149,10 @@ function init() {
 
 
 function run() {
-    var server, args = process.argv.slice(2,process.argv.length);
+    var server, args = process.argv.slice(2, process.argv.length);
     args.unshift(path.resolve(__dirname, './process'));
-    server = spawn('node', args);
-    server.stdout.on('data', function (data) {
-        winston.info(data.toString());
-    });
-    server.stderr.on('data', function (data) {
-        winston.info(data.toString());
+    spawn('node', args, {
+        stdio: 'inherit'
     });
 
     if (process.platform === "win32") {
@@ -219,8 +242,8 @@ function installService() {
                     return;
                 }
                 nssm = getNSSMPath(os.arch());
-                command = nssm + ' install ' + config.name +' "' + 
-                    process.execPath + '" \\"' + 
+                command = nssm + ' install ' + config.name + ' "' +
+                    process.execPath + '" \\"' +
                     path.resolve(__dirname, './process') + '\\"';
                 exec(command, function (err) {
                     if (err) {
@@ -275,8 +298,8 @@ function uninstallService() {
         if (os.platform() === 'win32') {
             // nssm magic
             command = getNSSMPath(os.arch());
-            exec(command + ' stop ' + config.name + ' confirm', function(err){
-                if(err) {
+            exec(command + ' stop ' + config.name + ' confirm', function (err) {
+                if (err) {
                     winston.error('An error occurred while trying to remove the service:' + err);
                     return;
                 }
@@ -298,5 +321,5 @@ function getNSSMPath(arch) {
         return '"' + path.resolve(__dirname, './nssm32.exe') + '"';
     } else {
         return '"' + path.resolve(__dirname, './nssm64.exe') + '"';
-    }    
+    }
 }

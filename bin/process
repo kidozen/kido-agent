@@ -23,7 +23,6 @@ winston.info("os arch", os.arch());
 
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
-
     winston.error("An error ocurred.", err.message);
 
     if (agent) {
@@ -46,12 +45,6 @@ process.on('exit', function () {
     }
     winston.info("bye!");
 });
-
-if (process.argv.indexOf("--version") > -1) {
-    process.exitCode = 0;
-    process.exit(0);
-    return;
-}
 
 initialize();
 
