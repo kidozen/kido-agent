@@ -3,3 +3,4 @@ npm-debug.log
 config.json
 .idea
 agent.log
+config.json.*
