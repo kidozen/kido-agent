@@ -22,3 +22,13 @@ Run the service executing:
 	node ./bin/server [--version] [--level error|warn|info|verbose|debug]
 
 If you are planning to link local connectors then you have to run the agent under administrator's credentials.
+
+### Init scripts for Linux
+
+If you want to install kido-agent as a service, perform
+
+* On Ubuntu/Debian
+	$ sudo cp installService_UBUNTU.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent
+
+* On Red Hat/CentOS
+	$ sudo cp installService_REDHAT.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent
