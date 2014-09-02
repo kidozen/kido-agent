@@ -28,7 +28,7 @@ If you are planning to link local connectors then you have to run the agent unde
 If you want to install kido-agent as a service, perform
 
 * On Ubuntu/Debian
-	$ sudo cp installService_UBUNTU.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent
+	`$ sudo cp installService_UBUNTU.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent`
 
 * On Red Hat/CentOS
-	$ sudo cp installService_REDHAT.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent
+	`$ sudo cp installService_REDHAT.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent`
