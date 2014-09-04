@@ -23,39 +23,25 @@ winston.info("os arch", os.arch());
 
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
-    winston.error("An error ocurred.", err.message);
-
-    if (agent) {
-        agent.stop(function () {
-            process.exit(process.exitCode);
-        });
-    } else {
-        process.exit(1);
-    }
+    winston.debug(err.message, Error.toJson(err));
+    winston.error('An error ocurred', err.message);
+    process.exit(1);
 });
 
 process.exitCode = 1;
-process.on('exit', function () {
-    if (process.exitCode !== 0) {
-        winston.error();
-        winston.error();
-        winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-        winston.error();
-        winston.error();
-    }
-    winston.info("bye!");
-});
 
 initialize();
 
 function watchAgent() {
     "use strict";
+    var retryDelay = 300000;
     //just a safety measure
+    winston.info('Trying to initialize again in ' + retryDelay/1000 + ' seconds...');
     if (!timeout) {
         timeout = setInterval(function () {
             winston.info('Creating a new instance of the agent.');
             initialize();
-        }, 300000);
+        }, retryDelay);
     }
 }
 
@@ -75,8 +61,9 @@ function initialize() {
         // authenticates the agent against kidozen using configured credentials
         agent.authenticate(function (err) {
             if (err) {
-                watchAgent();
-                return winston.error("Couldn't authenticate the agent instance against KidoZen services.", err);
+                winston.error("Couldn't authenticate the agent against KidoZen services.", err.message);
+                winston.debug(err.message, Error.toJson(err));
+                return watchAgent();
             }
 
             // starts the agent intance
@@ -84,7 +71,7 @@ function initialize() {
                 if (err) return winston.error("Couldn't start agent instance.", err);
 
                 process.on('SIGINT', function () {
-                    winston.info("stopping agent instance");
+                    agent.removeAllListeners('disconnect');
                     agent.stop(function () {
                         process.exitCode = 0;
                         process.exit();

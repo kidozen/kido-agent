@@ -10,6 +10,7 @@ var path        = require('path');
 var readLine    = require("readline");
 var winston     = require("winston");
 var prompt      = require('prompt');
+var agentProcess;
 
 var exec = function (cmd, cb) {
     winston.debug('Executing command: "' + cmd + '"');
@@ -150,7 +151,7 @@ function init() {
             config.proxy = result.proxy;
             config.credentials.user = result.user;
             config.credentials.password = result.password;
-            config.credentials.marketplace = result.marketplace;
+            config.credentials.marketplace = formatURL(result.marketplace);
 
             fs.writeFile(configFileName, JSON.stringify(config, null, "  "), function (err) {
                 if (err)  return winston.error(err);
@@ -164,7 +165,7 @@ function init() {
 function run() {
     var server, args = process.argv.slice(2, process.argv.length);
     args.unshift(path.resolve(__dirname, './process'));
-    spawn('node', args, {
+    agentProcess = spawn('node', args, {
         stdio: 'inherit'
     });
 
@@ -182,25 +183,24 @@ function run() {
     // Wait for a Ctrl+C (SIGINT) to exit
     winston.info('Agent is starting ...' + os.EOL + os.EOL + os.EOL + '\t\tPress Control-C to exit.' + os.EOL + os.EOL);
     process.on('SIGINT', function () {
-        winston.info("stopping agent instance");
         process.exitCode = 0;
-        process.exit();
+        
+        agentProcess.on('exit', function (){
+            process.exit();
+        });
     });
 
     process.on('SIGTERM', function () {
         winston.info("stopping agent instance");
         process.exitCode = 0;
+        agentProcess.kill();
         process.exit();
     });
 
     process.exitCode = 1;
     process.on('exit', function () {
         if (process.exitCode !== 0) {
-            winston.error();
-            winston.error();
             winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-            winston.error();
-            winston.error();
         }
         winston.info("bye!");
     });
@@ -334,5 +334,15 @@ function getNSSMPath(arch) {
         return '"' + path.resolve(__dirname, './nssm32.exe') + '"';
     } else {
         return '"' + path.resolve(__dirname, './nssm64.exe') + '"';
+    }
+}
+
+function formatURL(url){
+    if(url.indexOf('http') !== -1 && url.indexOf('https') === -1) {
+        return url.replace('http', 'https');
+    } else if (url.indexOf('http') === -1) {
+        return 'https://' + url;
+    } else {
+        return url;
     }
 }
