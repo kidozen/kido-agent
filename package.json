@@ -22,6 +22,7 @@
     "email": "development@kidozen.com",
     "url": "https://github.com/kidozen/kido-agent/issues"
   },  
+  "preferGlobal": true,  
   "directories": {
     "lib": "./lib",
     "bin": "./bin"
