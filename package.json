@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.49",
+  "version": "0.1.47",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [
@@ -28,21 +28,20 @@
     "bin": "./bin"
   },  
   "dependencies": {
-    "async": "0.9.x",
-    "express": "3.16.9",
-    "join": "3.0.0",
+    "express": "3.3.4",
+    "join": "2.3.0",
     "json-stringify-safe": "5.0.0",
-    "moment": "2.8.2",
-    "nconf": "0.6.9",
-    "npm": "1.4.25",
+    "moment": "2.5.1",
+    "nconf": "0.6.7",
+    "npm": "1.4.6",
     "prompt": "0.2.13",
-    "read-installed": "3.1.1",
-    "request": "2.40.0",
-    "simple-errors": "0.0.5",
+    "read-installed": "0.0.4",
+    "request": "2.25.0",
+    "simple-errors": "0.0.4",
     "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
-    "socket.io-stream": "0.5.3",
-    "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/v0.4.1.tar.gz",
-    "winston": "0.7.3"
+    "socket.io-stream": "0.5.0",
+    "tunnel-agent": "0.4.0",
+    "winston": "0.7.2"
   },
   "devDependencies": {
     "mocha": "1.11.0",
