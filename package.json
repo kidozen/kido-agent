@@ -28,6 +28,7 @@
     "bin": "./bin"
   },  
   "dependencies": {
+    "async": "0.9.x",
     "express": "3.3.4",
     "join": "2.3.0",
     "json-stringify-safe": "5.0.0",
@@ -40,7 +41,7 @@
     "simple-errors": "0.0.4",
     "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
     "socket.io-stream": "0.5.0",
-    "tunnel-agent": "0.4.0",
+    "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/v0.4.1.tar.gz",
     "winston": "0.7.2"
   },
   "devDependencies": {
