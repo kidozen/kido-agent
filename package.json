@@ -39,9 +39,9 @@
     "read-installed": "3.1.1",
     "request": "2.40.0",
     "simple-errors": "0.0.5",
-    "socket.io-client": "http://github.com/kidozen/socket.io-client/tarball/0.9",
+    "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
     "socket.io-stream": "0.5.3",
-    "tunnel-agent": "0.4.0",
+    "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/v0.4.1.tar.gz",
     "winston": "0.7.3"
   },
   "devDependencies": {
