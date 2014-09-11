@@ -30,7 +30,6 @@
   "dependencies": {
     "async": "0.9.x",
     "express": "3.3.4",
-    "join": "2.3.0",
     "json-stringify-safe": "5.0.0",
     "moment": "2.5.1",
     "nconf": "0.6.7",

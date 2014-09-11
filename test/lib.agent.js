@@ -1,3 +1,4 @@
+/* jshint ignore:start */
 var path        = require("path");
 var mockuire    = require("mockuire")(module);
 var server      = new (require('events').EventEmitter)();
@@ -594,3 +595,4 @@ describe("Agent", function() {
         });
     });
 });
+/* jshint ignore:end */
