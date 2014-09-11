@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "0.1.50",
+  "version": "0.1.51",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [
@@ -41,7 +41,7 @@
     "simple-errors": "0.0.4",
     "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
     "socket.io-stream": "0.5.0",
-    "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/v0.4.1.tar.gz",
+    "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/912a7a6d00e10ec76baf9c9369de280fa5badef3.tar.gz",
     "winston": "0.7.2"
   },
   "devDependencies": {
