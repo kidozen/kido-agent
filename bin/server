@@ -5,7 +5,7 @@ require("../lib/customizeWinston");
 
 var fs          = require('fs');
 var os          = require('os');
-var spawn       = require('child_process').spawn;
+var fork        = require('child_process').fork;
 var path        = require('path');
 var readLine    = require("readline");
 var winston     = require("winston");
@@ -164,10 +164,7 @@ function init() {
 
 function run() {
     var args = process.argv.slice(2, process.argv.length);
-    args.unshift(path.resolve(__dirname, './process'));
-    agentProcess = spawn('node', args, {
-        stdio: ['pipe', process.stdout, process.stderr]
-    });
+    agentProcess = fork(path.resolve(__dirname, './process'), args);
 
     agentProcess.on('exit', function(){
         winston.info('Restarting kido-agent process in ' + waitUntilRestart/1000 + ' seconds...');
@@ -321,10 +318,6 @@ function formatURL(url){
     }
 }
 
-function restart(){
-    run();
-}
-
 function setupProcess(){
     if (process.platform === "win32") {
         var rl = readLine.createInterface({
@@ -342,6 +335,7 @@ function setupProcess(){
 
         if(agentProcess) {
             agentProcess.removeAllListeners('exit');
+            agentProcess.send({event: 'SIGINT'});
             agentProcess.on('exit', function(){
                 process.exit();
             });
@@ -358,7 +352,7 @@ function setupProcess(){
     });
 
     //process.exitCode = 1;
-    process.on('exit', function (err) {
+    process.on('exit', function () {
         if (process.exitCode !== 0) {
             winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
         }

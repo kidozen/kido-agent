@@ -6,7 +6,6 @@ require("../lib/customizeWinston");
 
 var os          = require("os");
 var winston     = require("winston");
-var readLine    = require ("readline");
 var Agent       = require("../lib/agent");
 var pkg         = require("../package.json");
 var timeout;
@@ -29,16 +28,26 @@ process.on('uncaughtException', function (err) {
     process.exit();
 });
 
+// message from parent process
+process.on('message', function(data){
+    if(data.event === 'SIGINT') {
+        process.exitCode = 0;
+        if (agentInstance) {
+            agentInstance.removeAllListeners('disconnect');
+            agentInstance.stop(function(){
+                process.exit();
+            });
+        } else {
+            process.exit();
+        }
+    } else {
+        winston.debug('Not supported message.');
+    }
+});
+
 process.exitCode = 1;
 
 initialize();
-process.on('SIGINT', function () {
-    agentInstance.removeAllListeners('disconnect');
-    agentInstance.stop(function () {
-        process.exitCode = 0;
-        process.exit();
-    });
-});
 
 function watchAgent() {
     "use strict";
@@ -64,7 +73,11 @@ function initialize() {
         watchAgent();
     });
     agentInstance.initialize(function (err) {
-        if (err) return winston.error("Couldn't initialize agent instance.", err);
+        if (err) {
+            winston.error("Couldn't initialize the agent:", err.message);
+            winston.debug(err.message, Error.toJson(err));
+            return watchAgent();
+        }
 
         // authenticates the agent against kidozen using configured credentials
         agentInstance.authenticate(function (err) {
@@ -76,8 +89,11 @@ function initialize() {
 
             // starts the agent intance
             agentInstance.start(function (err) {
-                if (err) return winston.error("Couldn't start agent instance.", err);
-
+                if (err) {
+                    winston.error("The agent couldn't start:", err.message);
+                    winston.debug(err.message, Error.toJson(err));
+                    return watchAgent();
+                }
             });
         });
     });
