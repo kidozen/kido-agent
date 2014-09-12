@@ -5,12 +5,13 @@ require("../lib/customizeWinston");
 
 var fs          = require('fs');
 var os          = require('os');
-var spawn       = require('child_process').spawn;
+var fork        = require('child_process').fork;
 var path        = require('path');
 var readLine    = require("readline");
 var winston     = require("winston");
 var prompt      = require('prompt');
 var agentProcess;
+var waitUntilRestart = 10000; // 10 secs
 
 var exec = function (cmd, cb) {
     winston.debug('Executing command: "' + cmd + '"');
@@ -45,7 +46,7 @@ switch (param) {
         init();
         break;
     case 'run':
-        run();
+        setupProcess();
         break;
     case 'install-service':
         installService();
@@ -54,7 +55,7 @@ switch (param) {
         uninstallService();
         break;
     case undefined:
-        run();
+        setupProcess();
         break;
     default:
         unknownCommand();
@@ -161,49 +162,19 @@ function init() {
     });
 }
 
-
 function run() {
-    var server, args = process.argv.slice(2, process.argv.length);
-    args.unshift(path.resolve(__dirname, './process'));
-    agentProcess = spawn('node', args, {
-        stdio: 'inherit'
+    var args = process.argv.slice(2, process.argv.length);
+    agentProcess = fork(path.resolve(__dirname, './process'), args);
+
+    agentProcess.on('exit', function(){
+        winston.info('Restarting kido-agent process in ' + waitUntilRestart/1000 + ' seconds...');
+        agentProcess = null;
+        setTimeout(function(){
+            run();
+        }, waitUntilRestart);
     });
 
-    if (process.platform === "win32") {
-        var rl = readLine.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        });
-
-        rl.on("SIGINT", function () {
-            process.emit("SIGINT");
-        });
-    }
-
-    // Wait for a Ctrl+C (SIGINT) to exit
     winston.info('Agent is starting ...' + os.EOL + os.EOL + os.EOL + '\t\tPress Control-C to exit.' + os.EOL + os.EOL);
-    process.on('SIGINT', function () {
-        process.exitCode = 0;
-        
-        agentProcess.on('exit', function (){
-            process.exit();
-        });
-    });
-
-    process.on('SIGTERM', function () {
-        winston.info("stopping agent instance");
-        process.exitCode = 0;
-        agentProcess.kill();
-        process.exit();
-    });
-
-    process.exitCode = 1;
-    process.on('exit', function () {
-        if (process.exitCode !== 0) {
-            winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-        }
-        winston.info("bye!");
-    });
 }
 
 function installService() {
@@ -345,4 +316,48 @@ function formatURL(url){
     } else {
         return url;
     }
+}
+
+function setupProcess(){
+    if (process.platform === "win32") {
+        var rl = readLine.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
+        rl.on("SIGINT", function () {
+            process.emit("SIGINT");
+        });
+    }
+
+    process.on('SIGINT', function () {
+        process.exitCode = 0;
+
+        if(agentProcess) {
+            agentProcess.removeAllListeners('exit');
+            agentProcess.send({event: 'SIGINT'});
+            agentProcess.on('exit', function(){
+                process.exit();
+            });
+        } else {
+            process.exit();
+        }
+    });
+
+    process.on('SIGTERM', function () {
+        winston.info("Stopping kido-agent parent process.");
+        process.exitCode = 0;
+        agentProcess.kill();
+        process.exit();
+    });
+
+    //process.exitCode = 1;
+    process.on('exit', function () {
+        if (process.exitCode !== 0) {
+            winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
+        }
+        winston.info("bye!");
+    });
+
+    run();
 }

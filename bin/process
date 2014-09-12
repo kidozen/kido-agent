@@ -4,12 +4,12 @@
 require("simple-errors");
 require("../lib/customizeWinston");
 
-var os			= require("os");
+var os          = require("os");
 var winston     = require("winston");
-var readLine    = require ("readline");
-var agent       = require("../lib/agent");
-var pkg			= require("../package.json");
+var Agent       = require("../lib/agent");
+var pkg         = require("../package.json");
 var timeout;
+var agentInstance;
 
 process.title = pkg.name;
 
@@ -24,8 +24,25 @@ winston.info("os arch", os.arch());
 // Catch any unhandled exception
 process.on('uncaughtException', function (err) {
     winston.debug(err.message, Error.toJson(err));
-    winston.error('An error ocurred', err.message);
-    process.exit(1);
+    winston.error('An error ocurred:', err.message);
+    process.exit();
+});
+
+// message from parent process
+process.on('message', function(data){
+    if(data.event === 'SIGINT') {
+        process.exitCode = 0;
+        if (agentInstance) {
+            agentInstance.removeAllListeners('disconnect');
+            agentInstance.stop(function(){
+                process.exit();
+            });
+        } else {
+            process.exit();
+        }
+    } else {
+        winston.debug('Not supported message.');
+    }
 });
 
 process.exitCode = 1;
@@ -47,19 +64,23 @@ function watchAgent() {
 
 function initialize() {
     // creates an agent instance
-    agent = new Agent();
-    agent.on("connect", function () {
+    agentInstance = new Agent();
+    agentInstance.on("connect", function () {
         clearInterval(timeout);
         timeout = undefined;
     });
-    agent.on("disconnect", function () {
+    agentInstance.on("disconnect", function () {
         watchAgent();
     });
-    agent.initialize(function (err) {
-        if (err) return winston.error("Couldn't initialize agent instance.", err);
+    agentInstance.initialize(function (err) {
+        if (err) {
+            winston.error("Couldn't initialize the agent:", err.message);
+            winston.debug(err.message, Error.toJson(err));
+            return watchAgent();
+        }
 
         // authenticates the agent against kidozen using configured credentials
-        agent.authenticate(function (err) {
+        agentInstance.authenticate(function (err) {
             if (err) {
                 winston.error("Couldn't authenticate the agent against KidoZen services.", err.message);
                 winston.debug(err.message, Error.toJson(err));
@@ -67,18 +88,13 @@ function initialize() {
             }
 
             // starts the agent intance
-            agent.start(function (err) {
-                if (err) return winston.error("Couldn't start agent instance.", err);
-
-                process.on('SIGINT', function () {
-                    agent.removeAllListeners('disconnect');
-                    agent.stop(function () {
-                        process.exitCode = 0;
-                        process.exit();
-                    });
-                });
+            agentInstance.start(function (err) {
+                if (err) {
+                    winston.error("The agent couldn't start:", err.message);
+                    winston.debug(err.message, Error.toJson(err));
+                    return watchAgent();
+                }
             });
         });
     });
 }
-
