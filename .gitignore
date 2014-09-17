@@ -2,4 +2,4 @@
 npm-debug.log
 config.json
 config.json.*
-agent.log
+/logs
