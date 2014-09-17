@@ -41,7 +41,8 @@
     "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
     "socket.io-stream": "0.5.0",
     "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/912a7a6d00e10ec76baf9c9369de280fa5badef3.tar.gz",
-    "winston": "0.7.2"
+    "winston": "0.7.2",
+    "split": "0.3.0"
   },
   "devDependencies": {
     "mocha": "1.11.0",
