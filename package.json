@@ -30,6 +30,7 @@
   "dependencies": {
     "async": "0.9.x",
     "express": "3.3.4",
+    "fstream": "~1.0.2",
     "json-stringify-safe": "5.0.0",
     "moment": "2.5.1",
     "nconf": "0.6.7",
@@ -41,7 +42,7 @@
     "simple-errors": "0.0.4",
     "socket.io-client": "https://github.com/kidozen/socket.io-client/tarball/0.9",
     "socket.io-stream": "0.5.0",
-    "split": "~0.3.0",
+    "tar": "~1.0.1",
     "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/912a7a6d00e10ec76baf9c9369de280fa5badef3.tar.gz",
     "winston": "0.7.2"
   },
