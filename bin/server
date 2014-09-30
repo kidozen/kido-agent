@@ -22,7 +22,7 @@ var param = process.argv[2];
 var configFileName      = 'config.json';
 var linuxBashFileName   = 'installService.sh';
 
-if (process.argv.indexOf("--version") > -1 || process.argv.indexOf("-v")) {
+if (process.argv.indexOf("--version") > -1 || process.argv.indexOf("-v") > -1) {
     winston.info('Version: ' +
         require(path.resolve(__dirname, '../package.json')).version);
     process.exitCode = 0;
@@ -57,7 +57,7 @@ switch (param) {
         break;
     case 'uninstall-service':
         uninstallService();
-        break;
+        break;  
     case undefined:
         setupProcess();
         break;
