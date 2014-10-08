@@ -82,14 +82,12 @@ function init() {
             user: '',
             password: '',
             marketplace: ''
-        },
-        proxy: null
+        }
     };
     var defaultName = '',
         defaultUser = '',
         defaultPassword = '',
-        defaultMarketplace = '',
-        defaultProxy = '';
+        defaultMarketplace = '';
 
     // check if the config.json exists
     getConfigFile(function (err, prevConfig) {
@@ -100,9 +98,6 @@ function init() {
 
         if (prevConfig && prevConfig.name) {
             defaultName = prevConfig.name;
-        }
-        if (prevConfig && prevConfig.proxy) {
-            defaultProxy = prevConfig.proxy;
         }
         if (prevConfig && prevConfig.credentials && prevConfig.credentials.user) {
             defaultUser = prevConfig.credentials.user;
@@ -137,13 +132,6 @@ function init() {
                     type: 'string',
                     default: defaultMarketplace,
                     required: true
-                },
-                proxy: {
-                    type: 'string',
-                    default: defaultProxy,
-                    description: (defaultProxy ? "proxy: Enter 'none' to clear a previous value." : ''),
-                    required: false,
-                    before: function(v) { return (v==='none') ? "" : v; }
                 }
             }
         };
@@ -153,7 +141,6 @@ function init() {
             if (err)  return winston.error(err);
 
             config.name = result.name;
-            config.proxy = result.proxy;
             config.credentials.user = result.user;
             config.credentials.password = result.password;
             config.credentials.marketplace = formatURL(result.marketplace);
