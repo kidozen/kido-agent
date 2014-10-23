@@ -20,7 +20,7 @@ var exec = function (cmd, cb) {
 
 var param = process.argv[2];
 var configFileName      = 'config.json';
-var linuxBashFileName   = 'installService.sh';
+var bashFileName  = 'installService.sh';
 
 if (process.argv.indexOf("--version") > -1 || process.argv.indexOf("-v") > -1) {
     winston.info('Version: ' +
@@ -182,9 +182,12 @@ function installService() {
                 return;
             }
 
-            fs.readFile(linuxBashFileName, function (err, bashFile) {
+            fs.readFile(__dirname + '/../' + bashFileName, function (err, bashFile) {
+                if(err) {
+                    return winston.error(err.message);
+                }
                 var service = bashFile.toString().replace(/kido-agent/g, config.name)
-                    .replace(/current-dir/g, process.cwd());
+                    .replace(/current-dir/g, process.cwd()).replace(/process-path/g, __dirname);
 
                 fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
                     if (err) {
