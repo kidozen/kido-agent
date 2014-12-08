@@ -1,7 +1,7 @@
 {
   "name": "kido-agent",
   "description": "The KidoZen's agent service.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./bin/server",
   "author": "Kidozen <development@kidozen.com>",
   "contributors": [
@@ -32,7 +32,7 @@
     "express": "3.3.4",
     "fstream": "~1.0.2",
     "json-stringify-safe": "5.0.0",
-    "moment": "2.5.1",
+    "moment": "^2.8.4",
     "nconf": "0.6.7",
     "npm": "1.4.6",
     "prompt": "0.2.13",
