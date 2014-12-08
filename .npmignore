@@ -4,3 +4,4 @@ config.json
 .idea
 agent.log
 config.json.*
+/logs
