@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-// Module's dependencies 
 require("simple-errors");
 require("../lib/customizeWinston");
 
@@ -22,26 +21,26 @@ winston.info("os platform", os.platform());
 winston.info("os arch", os.arch());
 
 // Catch any unhandled exception
-process.on('uncaughtException', function (err) {
+process.on("uncaughtException", function (err) {
     winston.debug(err.message, Error.toJson(err));
-    winston.error('An error ocurred:', err.message);
+    winston.error("An error ocurred:", err.message);
     process.exit();
 });
 
 // message from parent process
-process.on('message', function(data){
-    if(data.event === 'SIGINT') {
+process.on("message", function (data) {
+    if (data.event === "SIGINT") {
         process.exitCode = 0;
         if (agentInstance) {
-            agentInstance.removeAllListeners('disconnect');
-            agentInstance.stop(function(){
+            agentInstance.removeAllListeners("disconnect");
+            agentInstance.stop(function () {
                 process.exit();
             });
         } else {
             process.exit();
         }
     } else {
-        winston.debug('Not supported message.');
+        winston.debug("Not supported message.");
     }
 });
 
@@ -53,10 +52,10 @@ function watchAgent() {
     "use strict";
     var retryDelay = 300000;
     //just a safety measure
-    winston.info('Trying to initialize again in ' + retryDelay/1000 + ' seconds...');
+    winston.info("Trying to initialize again in " + retryDelay / 1000 + " seconds...");
     if (!timeout) {
         timeout = setInterval(function () {
-            winston.info('Creating a new instance of the agent.');
+            winston.info("Creating a new instance of the agent.");
             initialize();
         }, retryDelay);
     }
@@ -78,7 +77,6 @@ function initialize() {
             winston.debug(err.message, Error.toJson(err));
             return watchAgent();
         }
-
         // authenticates the agent against kidozen using configured credentials
         agentInstance.authenticate(function (err) {
             if (err) {
@@ -86,7 +84,6 @@ function initialize() {
                 winston.debug(err.message, Error.toJson(err));
                 return watchAgent();
             }
-
             // starts the agent intance
             agentInstance.start(function (err) {
                 if (err) {
