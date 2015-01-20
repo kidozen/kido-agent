@@ -41,3 +41,16 @@ If you want to install kido-agent as a service, you can execute `kido-agent inst
 
 * On Red Hat/CentOS
 	`$ sudo cp installService_REDHAT.sh /etc/init.d/kido-agent && sudo chmod +x /etc/init.d/kido-agent`
+
+
+## Running your agent
+
+Once you're done with the installation, you can run your agent with the following command:
+
+```
+kido-agent run
+```
+
+It will try to reach KidoZen's servers and authenticate against it's platform. If everything goes as expected, you should see `Agent is ready.` in your terminal.
+
+In case you don't want to store your service credentials in KidoZen's platform, you can configure the service to use a local configuration json file. If you specify a relative path in your Marketplace, take notice that it will be relative from where your agent instance is running.
