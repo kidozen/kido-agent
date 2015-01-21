@@ -53,6 +53,6 @@ kido-agent run
 
 It will try to reach KidoZen's servers and authenticate against it's platform. If everything goes as expected, you should see `Agent is ready.` in your terminal.
 
-In case you don't want to store your service credentials in KidoZen's platform, you can configure the service to use a local configuration json file. Go to your Marketplace -> Select the Admin panel -> Click on Enterprise API section -> Select Services on the sidebar and create or edit the service of your choice adding the file path to your configuration file in the **Local configuration file path** field. 
+In case you don't want to store your service credentials in KidoZen's platform, you can configure the service to use a local configuration json file. Go to your **Marketplace** -> Select the **Admin** panel -> Click on **Enterprise API** section -> Select **Services** on the sidebar and create or edit the service of your choice adding the file path to your configuration file in the **Local configuration file path** field. 
 ![config example](http://i.imgur.com/NJZL8q2.png)
 If you specify a relative path in your Marketplace, take notice that it will be relative from where your agent instance is running.
