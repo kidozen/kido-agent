@@ -174,33 +174,79 @@ function installService() {
             winston.error('Config file not found. Run kido-agent init to create one.');
             return;
         }
-        if (os.platform() === 'linux') {
-            var uid = parseInt(process.env.SUDO_UID);
-            //check for sudo
-            if (!uid) {
-                winston.error('Root permissions are needed.');
-                return;
+        prompt.message = "Confirm";
+        prompt.start();
+        prompt.get({
+            properties: {
+                response: {
+                    description: "Are you sure you want to install the service ".green +
+                    config.name + "?(yes/no)".green
+                }
+            }
+        }, function (err, result) {
+            if (err || (result.response.indexOf("yes") === -1 && result.response !== "y")) {
+                winston.info('Exitting.');
+                return process.exit(0);
             }
 
-            fs.readFile(__dirname + '/../' + bashFileName, function (err, bashFile) {
-                if(err) {
-                    return winston.error(err.message);
+            if (os.platform() === 'linux') {
+                var uid = parseInt(process.env.SUDO_UID);
+                //check for sudo
+                if (!uid) {
+                    winston.error('Root permissions are needed.');
+                    return;
                 }
-                var service = bashFile.toString().replace(/kido-agent/g, config.name)
-                    .replace(/current-dir/g, process.cwd()).replace(/process-path/g, __dirname);
 
-                fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
+                fs.readFile(__dirname + '/../' + bashFileName, function (err, bashFile) {
+                    if(err) {
+                        return winston.error(err.message);
+                    }
+                    var service = bashFile.toString().replace(/kido-agent/g, config.name)
+                        .replace(/current-dir/g, process.cwd()).replace(/process-path/g, __dirname);
+
+                    fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
+                        if (err) {
+                            winston.error('An error occurred while trying to save the bash file:' + err);
+                            return;
+                        }
+                        fs.chmod('/etc/init.d/' + config.name, 755, function (err) {
+                            if (err) {
+                                winston.error('An error occurred while trying to install the service:' + err);
+                                return;
+                            }
+
+                            exec('update-rc.d ' + config.name + ' defaults', function (err, stdout, stderr) {
+                                if (err) {
+                                    winston.error('An error occurred while trying to install the service:' + err);
+                                    return;
+                                }
+                                winston.info('Service installed successfully');
+                            });
+                        });
+                    });
+                });
+            }
+
+            if (os.platform() === 'win32') {
+
+                exec('npm config get prefix', function (err, stdout, stderr) {
+                    var nssm, command;
                     if (err) {
-                        winston.error('An error occurred while trying to save the bash file:' + err);
+                        winston.error('An error occurred while trying to install the service:' + err);
                         return;
                     }
-                    fs.chmod('/etc/init.d/' + config.name, 755, function (err) {
+                    nssm = getNSSMPath(os.arch());
+                    command = nssm + ' install ' + config.name + ' "' +
+                        process.execPath + '" \\"' +
+                        path.resolve(__dirname, './process') + '\\"';
+                    exec(command, function (err) {
                         if (err) {
                             winston.error('An error occurred while trying to install the service:' + err);
                             return;
                         }
 
-                        exec('update-rc.d ' + config.name + ' defaults', function (err, stdout, stderr) {
+                        command = nssm + ' set ' + config.name + ' AppDirectory ' + process.cwd();
+                        exec(command, function (err) {
                             if (err) {
                                 winston.error('An error occurred while trying to install the service:' + err);
                                 return;
@@ -209,37 +255,8 @@ function installService() {
                         });
                     });
                 });
-            });
-        }
-
-        if (os.platform() === 'win32') {
-            exec('npm config get prefix', function (err, stdout, stderr) {
-                var nssm, command;
-                if (err) {
-                    winston.error('An error occurred while trying to install the service:' + err);
-                    return;
-                }
-                nssm = getNSSMPath(os.arch());
-                command = nssm + ' install ' + config.name + ' "' +
-                    process.execPath + '" \\"' +
-                    path.resolve(__dirname, './process') + '\\"';
-                exec(command, function (err) {
-                    if (err) {
-                        winston.error('An error occurred while trying to install the service:' + err);
-                        return;
-                    }
-
-                    command = nssm + ' set ' + config.name + ' AppDirectory ' + process.cwd();
-                    exec(command, function (err) {
-                        if (err) {
-                            winston.error('An error occurred while trying to install the service:' + err);
-                            return;
-                        }
-                        winston.info('Service installed successfully');
-                    });
-                });
-            });
-        }
+            }
+        });
     });
 }
 
@@ -250,47 +267,64 @@ function uninstallService() {
             winston.error('Config file not found. Run kido-agent init to create one.');
             return;
         }
-        if (os.platform() === 'linux') {
-            var uid = parseInt(process.env.SUDO_UID);
-            // check for sudo
-            if (!uid) {
-                winston.error('Root permissions are needed.');
-                return;
+
+        prompt.message = "Confirm";
+        prompt.start();
+        prompt.get({
+            properties: {
+                response: {
+                    description: "Are you sure you want to uninstall the service ".green +
+                    config.name + "?(yes/no)".green
+                }
             }
-            exec('update-rc.d -f ' + config.name + ' remove', function (err, stdout, stderr) {
-                if (err) {
-                    winston.error('An error occurred while trying to remove the service:' + err);
+        }, function (err, result) {
+            if (err || (result.response !== "y" && result.response.indexOf("yes") === -1)) {
+                winston.info('Exitting.');
+                return process.exit(0);
+            }
+
+            if (os.platform() === 'linux') {
+                var uid = parseInt(process.env.SUDO_UID);
+                // check for sudo
+                if (!uid) {
+                    winston.error('Root permissions are needed.');
                     return;
                 }
-
-                exec('rm /etc/init.d/' + config.name, function (err, stdout, stderr) {
+                exec('update-rc.d -f ' + config.name + ' remove', function (err, stdout, stderr) {
                     if (err) {
                         winston.error('An error occurred while trying to remove the service:' + err);
                         return;
                     }
-                    winston.info('Service installed successfully');
-                });
-            });
-        }
 
-        if (os.platform() === 'win32') {
-            // nssm magic
-            command = getNSSMPath(os.arch());
-            exec(command + ' stop ' + config.name + ' confirm', function (err) {
-                if (err) {
-                    winston.error('An error occurred while trying to remove the service:' + err);
-                    return;
-                }
-                command = command + ' remove ' + config.name + ' confirm';
-                exec(command, function (err) {
+                    exec('rm /etc/init.d/' + config.name, function (err, stdout, stderr) {
+                        if (err) {
+                            winston.error('An error occurred while trying to remove the service:' + err);
+                            return;
+                        }
+                        winston.info('Service installed successfully');
+                    });
+                });
+            }
+
+            if (os.platform() === 'win32') {
+                // nssm magic
+                command = getNSSMPath(os.arch());
+                exec(command + ' stop ' + config.name + ' confirm', function (err) {
                     if (err) {
                         winston.error('An error occurred while trying to remove the service:' + err);
                         return;
                     }
-                    winston.info('Service removed successfully');
+                    command = command + ' remove ' + config.name + ' confirm';
+                    exec(command, function (err) {
+                        if (err) {
+                            winston.error('An error occurred while trying to remove the service:' + err);
+                            return;
+                        }
+                        winston.info('Service removed successfully');
+                    });
                 });
-            });
-        }
+            }
+        });
     });
 }
 
