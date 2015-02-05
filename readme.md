@@ -56,3 +56,17 @@ It will try to reach KidoZen's servers and authenticate against it's platform. I
 In case you don't want to store your service credentials in KidoZen's platform, you can configure the service to use a local configuration json file. Go to your **Marketplace** -> Select the **Admin** panel -> Click on **Enterprise API** section -> Select **Services** on the sidebar and create or edit the service of your choice adding the file path to your configuration file in the **Local configuration file path** field. 
 ![config example](http://i.imgur.com/NJZL8q2.png)
 If you specify a relative path in your Marketplace, take notice that it will be relative from where your agent instance is running.
+
+### Connecting your agent through a proxy
+
+If you want to run your agent behind a proxy, you should configure npm by executing the following commands in your terminal:
+
+```
+npm config set proxy http://username:password@proxyserver:port
+```
+and
+```
+npm config set https-proxy https://username:password@proxyserver:port
+```
+
+Once you are done executing both commands, you can check if your npm configuration is correct by running `npm show kido-agent`. If the command outputs a configuration file, you're now able to run **kido-agent** in your system.
