@@ -1,63 +1,62 @@
 #!/usr/bin/env node
-'use strict';
+"use strict";
 
 require("../lib/customizeWinston");
 
-var fs          = require('fs');
-var os          = require('os');
-var fork        = require('child_process').fork;
-var path        = require('path');
+var fs          = require("fs");
+var os          = require("os");
+var fork        = require("child_process").fork;
+var path        = require("path");
 var readLine    = require("readline");
 var winston     = require("winston");
-var prompt      = require('prompt');
+var prompt      = require("prompt");
 var agentProcess;
 var waitUntilRestart = 10000; // 10 secs
 
-var exec = function (cmd, cb) {
+function exec(cmd, cb) {
     winston.debug('Executing command: "' + cmd + '"');
-    require('child_process').exec(cmd, cb);
+    require("child_process").exec(cmd, cb);
 };
 
 var param = process.argv[2];
-var configFileName      = 'config.json';
-var bashFileName  = 'installService.sh';
+var configFileName      = "config.json";
+var bashFileName  = "installService";
+var ubuntulinuxDist = "UBUNTU";
+var redhatlinuxDist = "REDHAT";
+var linuxDistros = "[" + ubuntulinuxDist + " | " + redhatlinuxDist + "]";
 
 if (process.argv.indexOf("--version") > -1 || process.argv.indexOf("-v") > -1) {
-    winston.info('Version: ' +
-        require(path.resolve(__dirname, '../package.json')).version);
+    winston.info("Version: " +
+        require(path.resolve(__dirname, "../package.json")).version);
     process.exitCode = 0;
     process.exit(0);
-    return;
 }
 
-if (process.argv.indexOf("--ignore-invalid-certs") > -1) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-}
+if (process.argv.indexOf("--ignore-invalid-certs") > -1) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 if (process.argv.indexOf("--help") > -1) {
-    winston.info('List of commands:');
-    winston.info('init');
-    winston.info('run');
-    winston.info('install-service');
-    winston.info('uninstall-service');
+    winston.info("List of commands:");
+    winston.info("init");
+    winston.info("run");
+    winston.info("install-service");
+    winston.info("uninstall-service");
     process.exitCode = 0;
     process.exit(0);
-    return;
 }
 
 switch (param) {
-    case 'init':
+    case "init":
         init();
         break;
-    case 'run':
+    case "run":
         setupProcess();
         break;
-    case 'install-service':
-        installService();
+    case "install-service":
+        installService(process.argv[3]);
         break;
-    case 'uninstall-service':
-        uninstallService();
-        break;  
+    case "uninstall-service":
+        uninstallService(process.argv[3]);
+        break;
     case undefined:
         setupProcess();
         break;
@@ -66,7 +65,7 @@ switch (param) {
 }
 
 function unknownCommand() {
-    winston.info('Unknown command was specified. Exitting.');
+    winston.info("Unknown command was specified. Exitting.");
 }
 
 function getConfigFile(cb) {
@@ -77,59 +76,51 @@ function getConfigFile(cb) {
 
 function init() {
     var config = {
-        name: '',
+        name: "",
         credentials: {
-            user: '',
-            password: '',
-            marketplace: ''
+            user: "",
+            password: "",
+            marketplace: ""
         }
     };
-    var defaultName = '',
-        defaultUser = '',
-        defaultPassword = '',
-        defaultMarketplace = '';
+    var defaultName = "",
+        defaultUser = "",
+        defaultPassword = "",
+        defaultMarketplace = "";
 
     // check if the config.json exists
     getConfigFile(function (err, prevConfig) {
-        if (err && err.code !== 'ENOENT') {
+        if (err && err.code !== "ENOENT") {
             winston.error(err);
             return;
         }
 
-        if (prevConfig && prevConfig.name) {
-            defaultName = prevConfig.name;
-        }
-        if (prevConfig && prevConfig.credentials && prevConfig.credentials.user) {
-            defaultUser = prevConfig.credentials.user;
-        }
-        if (prevConfig && prevConfig.credentials && prevConfig.credentials.password) {
-            defaultPassword = prevConfig.credentials.password;
-        }
-        if (prevConfig && prevConfig.credentials && prevConfig.credentials.marketplace) {
-            defaultMarketplace = prevConfig.credentials.marketplace;
-        }
+        if (prevConfig && prevConfig.name) defaultName = prevConfig.name;
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.user) defaultUser = prevConfig.credentials.user;
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.password) defaultPassword = prevConfig.credentials.password;
+        if (prevConfig && prevConfig.credentials && prevConfig.credentials.marketplace) defaultMarketplace = prevConfig.credentials.marketplace;
 
         var schema = {
             properties: {
                 name: {
                     pattern: /^[a-zA-Z0-9\-]+$/,
-                    message: 'Name must be only letters, numbers or dashes',
-                    type: 'string',
+                    message: "Name must be only letters, numbers or dashes",
+                    type: "string",
                     default: defaultName,
                     required: true
                 },
                 user: {
-                    type: 'string',
+                    type: "string",
                     default: defaultUser,
                     required: true
                 },
                 password: {
-                    type: 'string',
+                    type: "string",
                     default: defaultPassword,
                     hidden: true
                 },
                 marketplace: {
-                    type: 'string',
+                    type: "string",
                     default: defaultMarketplace,
                     required: true
                 }
@@ -147,7 +138,7 @@ function init() {
 
             fs.writeFile(configFileName, JSON.stringify(config, null, "  "), function (err) {
                 if (err)  return winston.error(err);
-                winston.info('Config file saved successfully.');
+                winston.info("Config file saved successfully.");
             });
         });
     });
@@ -155,23 +146,23 @@ function init() {
 
 function run() {
     var args = process.argv.slice(2, process.argv.length);
-    agentProcess = fork(path.resolve(__dirname, './process'), args);
+    agentProcess = fork(path.resolve(__dirname, "./process"), args);
 
-    agentProcess.on('exit', function(){
-        winston.info('Restarting kido-agent process in ' + waitUntilRestart/1000 + ' seconds...');
+    agentProcess.on("exit", function () {
+        winston.info("Restarting kido-agent process in " + waitUntilRestart/1000 + " seconds...");
         agentProcess = null;
-        setTimeout(function(){
+        setTimeout(function () {
             run();
         }, waitUntilRestart);
     });
 
-    winston.info('Agent is starting ...' + os.EOL + os.EOL + os.EOL + '\t\tPress Control-C to exit.' + os.EOL + os.EOL);
+    winston.info("Agent is starting ..." + os.EOL + os.EOL + os.EOL + "\t\tPress Control-C to exit." + os.EOL + os.EOL);
 }
 
-function installService() {
+function installService(linuxDist) {
     getConfigFile(function (err, config) {
         if (err || !config.name) {
-            winston.error('Config file not found. Run kido-agent init to create one.');
+            winston.error("Config file not found. Run kido-agent init to create one.");
             return;
         }
         prompt.message = "Confirm";
@@ -185,86 +176,88 @@ function installService() {
             }
         }, function (err, result) {
             if (err || (result.response.indexOf("yes") === -1 && result.response !== "y")) {
-                winston.info('Exitting.');
+                winston.info("Exitting.");
                 return process.exit(0);
             }
 
-            if (os.platform() === 'linux') {
-                var uid = parseInt(process.env.SUDO_UID);
-                //check for sudo
-                if (!uid) {
-                    winston.error('Root permissions are needed.');
-                    return;
-                }
+            if (os.platform() === "linux") {
+                if (!isLinuxDistroNameOk(linuxDist)) return winston.error("You need to specify a linux distribution name: " + linuxDistros);
+                if (!isRootUser()) return winston.error("Root permissions are needed.");
 
-                fs.readFile(__dirname + '/../' + bashFileName, function (err, bashFile) {
-                    if(err) {
-                        return winston.error(err.message);
-                    }
+                bashFileName = bashFileName + "_" + linuxDist + ".sh";
+                fs.readFile(__dirname + "/../" + bashFileName, function (err, bashFile) {
+                    if (err) return winston.error(err.message);
                     var service = bashFile.toString().replace(/kido-agent/g, config.name)
                         .replace(/current-dir/g, process.cwd()).replace(/process-path/g, __dirname);
 
-                    fs.writeFile('/etc/init.d/' + config.name, service, function (err) {
+                    fs.writeFile("/etc/init.d/" + config.name, service, function (err) {
                         if (err) {
-                            winston.error('An error occurred while trying to save the bash file:' + err);
+                            winston.error("An error occurred while trying to save the bash file:" + err);
                             return;
                         }
-                        fs.chmod('/etc/init.d/' + config.name, 755, function (err) {
+                        fs.chmod("/etc/init.d/" + config.name, 755, function (err) {
                             if (err) {
-                                winston.error('An error occurred while trying to install the service:' + err);
+                                winston.error("An error occurred while trying to install the service:" + err);
                                 return;
                             }
 
-                            exec('update-rc.d ' + config.name + ' defaults', function (err, stdout, stderr) {
-                                if (err) {
-                                    winston.error('An error occurred while trying to install the service:' + err);
-                                    return;
-                                }
-                                winston.info('Service installed successfully');
-                            });
+                            if (linuxDist === ubuntulinuxDist)
+                                exec("update-rc.d " + config.name + " defaults", function (err, stdout, stderr) {
+                                    if (err) {
+                                        winston.error("An error occurred while trying to install the service:" + err);
+                                        return;
+                                    }
+                                    winston.info("Service installed successfully");
+                                });
+                            else
+                                exec("chkconfig --add " + config.name, function (err, stdout, stderr) {
+                                    if (err) return winston.error("An error occurred while trying to add the service:" + err);
+                                    exec("chkconfig --level 345 " + config.name + " on", function (err, stdout, stderr) {
+                                        if (err) return winston.error("An error occurred while trying to install the service:" + err);
+                                        winston.info("Service installed successfully");
+                                    });
+                                });
                         });
                     });
                 });
             }
 
-            if (os.platform() === 'win32') {
-
-                exec('npm config get prefix', function (err, stdout, stderr) {
+            if (os.platform() === "win32")
+                exec("npm config get prefix", function (err, stdout, stderr) {
                     var nssm, command;
                     if (err) {
-                        winston.error('An error occurred while trying to install the service:' + err);
+                        winston.error("An error occurred while trying to install the service:" + err);
                         return;
                     }
                     nssm = getNSSMPath(os.arch());
-                    command = nssm + ' install ' + config.name + ' "' +
+                    command = nssm + " install " + config.name + ' "' +
                         process.execPath + '" \\"' +
-                        path.resolve(__dirname, './process') + '\\"';
+                        path.resolve(__dirname, "./process") + '\\"';
                     exec(command, function (err) {
                         if (err) {
-                            winston.error('An error occurred while trying to install the service:' + err);
+                            winston.error("An error occurred while trying to install the service:" + err);
                             return;
                         }
 
-                        command = nssm + ' set ' + config.name + ' AppDirectory ' + process.cwd();
+                        command = nssm + " set " + config.name + " AppDirectory " + process.cwd();
                         exec(command, function (err) {
                             if (err) {
-                                winston.error('An error occurred while trying to install the service:' + err);
+                                winston.error("An error occurred while trying to install the service:" + err);
                                 return;
                             }
-                            winston.info('Service installed successfully');
+                            winston.info("Service installed successfully");
                         });
                     });
                 });
-            }
         });
     });
 }
 
-function uninstallService() {
+function uninstallService(linuxDist) {
     getConfigFile(function (err, config) {
         var command;
         if (err || !config.name) {
-            winston.error('Config file not found. Run kido-agent init to create one.');
+            winston.error("Config file not found. Run kido-agent init to create one.");
             return;
         }
 
@@ -279,48 +272,49 @@ function uninstallService() {
             }
         }, function (err, result) {
             if (err || (result.response !== "y" && result.response.indexOf("yes") === -1)) {
-                winston.info('Exitting.');
+                winston.info("Exitting.");
                 return process.exit(0);
             }
 
-            if (os.platform() === 'linux') {
-                var uid = parseInt(process.env.SUDO_UID);
-                // check for sudo
-                if (!uid) {
-                    winston.error('Root permissions are needed.');
-                    return;
-                }
-                exec('update-rc.d -f ' + config.name + ' remove', function (err, stdout, stderr) {
-                    if (err) {
-                        winston.error('An error occurred while trying to remove the service:' + err);
-                        return;
-                    }
+            if (os.platform() === "linux") {
+                if (!isLinuxDistroNameOk(linuxDist)) return winston.error("You need to specify a linux distribution name: " + linuxDistros);
+                if (!isRootUser()) return winston.error("Root permissions are needed.");
 
-                    exec('rm /etc/init.d/' + config.name, function (err, stdout, stderr) {
-                        if (err) {
-                            winston.error('An error occurred while trying to remove the service:' + err);
-                            return;
-                        }
-                        winston.info('Service installed successfully');
+                if (linuxDist === ubuntulinuxDist)
+                    exec("update-rc.d -f " + config.name + " remove", function (err, stdout, stderr) {
+                        if (err) winston.error("An error occurred while trying to remove the service:" + err);
+
+                        exec("rm /etc/init.d/" + config.name, function (err, stdout, stderr) {
+                            if (err) return winston.error("An error occurred while trying to remove the service:" + err);
+                            winston.info("Service uninstalled successfully");
+                        });
                     });
-                });
+                else
+                    exec("chkconfig --del " + config.name, function (err, stdout, stderr) {
+                        if (err) return winston.error("An error occurred while trying to remove the service:" + err);
+
+                        exec("rm /etc/init.d/" + config.name, function (err, stdout, stderr) {
+                            if (err) return winston.error("An error occurred while trying to remove the service:" + err);
+                            winston.info("Service uninstalled successfully");
+                        });
+                    });
             }
 
-            if (os.platform() === 'win32') {
+            if (os.platform() === "win32") {
                 // nssm magic
                 command = getNSSMPath(os.arch());
-                exec(command + ' stop ' + config.name + ' confirm', function (err) {
+                exec(command + " stop " + config.name + " confirm", function (err) {
                     if (err) {
-                        winston.error('An error occurred while trying to remove the service:' + err);
+                        winston.error("An error occurred while trying to remove the service:" + err);
                         return;
                     }
-                    command = command + ' remove ' + config.name + ' confirm';
+                    command = command + " remove " + config.name + " confirm";
                     exec(command, function (err) {
                         if (err) {
-                            winston.error('An error occurred while trying to remove the service:' + err);
+                            winston.error("An error occurred while trying to remove the service:" + err);
                             return;
                         }
-                        winston.info('Service removed successfully');
+                        winston.info("Service removed successfully");
                     });
                 });
             }
@@ -328,25 +322,26 @@ function uninstallService() {
     });
 }
 
+function isLinuxDistroNameOk(linuxDist) {
+    return (linuxDist && (linuxDist === ubuntulinuxDist || linuxDist === redhatlinuxDist));
+}
+
+function isRootUser() {
+    return process.getuid() === 0;
+}
+
 function getNSSMPath(arch) {
-    if (arch === 'ia32') {
-        return '"' + path.resolve(__dirname, './nssm32.exe') + '"';
-    } else {
-        return '"' + path.resolve(__dirname, './nssm64.exe') + '"';
-    }
+    if (arch === "ia32") return '"' + path.resolve(__dirname, "./nssm32.exe") + '"';
+    else return '"' + path.resolve(__dirname, "./nssm64.exe") + '"';
 }
 
-function formatURL(url){
-    if(url.indexOf('http') !== -1 && url.indexOf('https') === -1) {
-        return url.replace('http', 'https');
-    } else if (url.indexOf('http') === -1) {
-        return 'https://' + url;
-    } else {
-        return url;
-    }
+function formatURL(url) {
+    if (url.indexOf("http") !== -1 && url.indexOf("https") === -1) return url.replace("http", "https");
+    else if (url.indexOf("http") === -1) return "https://" + url;
+    else return url;
 }
 
-function setupProcess(){
+function setupProcess() {
     if (process.platform === "win32") {
         var rl = readLine.createInterface({
             input: process.stdin,
@@ -358,21 +353,19 @@ function setupProcess(){
         });
     }
 
-    process.on('SIGINT', function () {
+    process.on("SIGINT", function () {
         process.exitCode = 0;
 
-        if(agentProcess) {
-            agentProcess.removeAllListeners('exit');
-            agentProcess.send({event: 'SIGINT'});
-            agentProcess.on('exit', function(){
+        if (agentProcess) {
+            agentProcess.removeAllListeners("exit");
+            agentProcess.send({event: "SIGINT"});
+            agentProcess.on("exit", function () {
                 process.exit();
             });
-        } else {
-            process.exit();
-        }
+        } else process.exit();
     });
 
-    process.on('SIGTERM', function () {
+    process.on("SIGTERM", function () {
         winston.info("Stopping kido-agent parent process.");
         process.exitCode = 0;
         agentProcess.kill();
@@ -380,10 +373,8 @@ function setupProcess(){
     });
 
     //process.exitCode = 1;
-    process.on('exit', function () {
-        if (process.exitCode !== 0) {
-            winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
-        }
+    process.on("exit", function () {
+        if (process.exitCode !== 0) winston.error("If you continue to have problems to run the agent, please contact the support with the 'agent.log' file at support@kidozen.com.");
         winston.info("bye!");
     });
 
