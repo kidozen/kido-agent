@@ -195,7 +195,7 @@ function installService(linuxDist) {
                             winston.error("An error occurred while trying to save the bash file:" + err);
                             return;
                         }
-                        fs.chmod("/etc/init.d/" + config.name, 755, function (err) {
+                        fs.chmod("/etc/init.d/" + config.name, "0755", function (err) {
                             if (err) {
                                 winston.error("An error occurred while trying to install the service:" + err);
                                 return;
