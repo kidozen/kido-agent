@@ -44,6 +44,7 @@
     "socket.io-stream": "0.5.0",
     "tar": "~1.0.1",
     "tunnel-agent": "https://github.com/mikeal/tunnel-agent/archive/912a7a6d00e10ec76baf9c9369de280fa5badef3.tar.gz",
+    "JSONStream": "0.10.0",
     "winston": "~0.8.3"
   },
   "devDependencies": {
