@@ -6,11 +6,12 @@
 #
 
 # Path where kido-agent is installed
-DAEMON_PATH="/home/vagrant/kido-agent"
+DAEMON_PATH=process-path
 DAEMON_LOG="$DAEMON_PATH/agent.log"
 
 # Full path to node binary
-NODE_BIN="/usr/local/bin/node"
+# NODE_BIN="/usr/local/bin/node"
+NODE_BIN=node-path
 DAEMON="bin/process"
 DAEMONOPTS=""
 

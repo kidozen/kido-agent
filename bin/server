@@ -187,8 +187,11 @@ function installService(linuxDist) {
                 bashFileName = bashFileName + "_" + linuxDist + ".sh";
                 fs.readFile(__dirname + "/../" + bashFileName, function (err, bashFile) {
                     if (err) return winston.error(err.message);
-                    var service = bashFile.toString().replace(/kido-agent/g, config.name)
-                        .replace(/current-dir/g, process.cwd()).replace(/process-path/g, __dirname);
+                    var service = bashFile.toString()
+                        .replace(/kido-agent/g, config.name) // kido-agent name
+                        .replace(/current-dir/g, process.cwd()) // config.json path
+                        .replace(/process-path/g, __dirname) // kido-agent path
+                        .replace(/node-path/g, process.execPath);
 
                     fs.writeFile("/etc/init.d/" + config.name, service, function (err) {
                         if (err) {

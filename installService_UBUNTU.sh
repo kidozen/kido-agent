@@ -1,7 +1,6 @@
 #! /bin/sh
 DIR=current-dir	
-NPM_PREFIX=/usr
-NODE_PATH=/usr/bin
+NODE_PATH=node-path
 PID=/var/run/kido-agent.pid
 PROCESS_PATH=process-path
 case "$1" in
