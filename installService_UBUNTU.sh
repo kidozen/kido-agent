@@ -1,8 +1,13 @@
 #! /bin/sh
+
+# Path where kido-agent config.json file is locate
 DIR=current-dir
+# Full path to node binary
 NODE_PATH=node-path
-PID=/var/run/kido-agent.pid
+
 PROCESS_PATH=process-path
+PID=/var/run/kido-agent.pid
+
 case "$1" in
       start)
                 echo "starting kido-agent"

@@ -5,14 +5,15 @@
 # processname: kido-agent
 #
 
-# Path where kido-agent is installed
-DAEMON_PATH=process-path
-DAEMON_LOG="$DAEMON_PATH/agent.log"
-
+# Path where kido-agent config.json file is located
+DIR=current-dir
 # Full path to node binary
-NODE_BIN=node-path
+NODE_PATH=node-path
+
+PROCESS_PATH=process-path
 DAEMON="process"
 DAEMONOPTS=""
+DAEMON_LOG="$PROCESS_PATH/agent.log"
 
 NAME=kido-agent
 DESC="Kidozen agent"
@@ -26,8 +27,8 @@ start)
            exit 10
         fi
         printf "%-50s" "Starting $NAME..."
-        cd $DAEMON_PATH
-        PID=`$NODE_BIN $DAEMON $DAEMONOPTS >> $DAEMON_LOG 2>&1 & echo $!`
+        cd $DIR
+        PID=`$NODE_PATH $PROCESS_PATH/$DAEMON $DAEMONOPTS >> $DAEMON_LOG 2>&1 & echo $!`
         if [ -z $PID ]; then
             printf "%s\n" "Fail"
         else
@@ -51,7 +52,6 @@ status)
 stop)
         printf "%-50s" "Stopping $NAME"
             PID=`cat $PIDFILE`
-            cd $DAEMON_PATH
         if [ -f $PIDFILE ]; then
             kill -HUP $PID
             printf "%s\n" "Ok"
