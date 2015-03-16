@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
+require("babel/register");
 require("../lib/customizeWinston");
 
 var fs          = require("fs");
