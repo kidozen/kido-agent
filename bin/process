@@ -7,6 +7,7 @@ var os          = require("os");
 var winston     = require("winston");
 var Agent       = require("../lib/agent");
 var pkg         = require("../package.json");
+var semver      = require("semver");
 var timeout;
 var agentInstance;
 
@@ -45,6 +46,12 @@ process.on("message", function (data) {
 });
 
 process.exitCode = 1;
+
+if (!semver.satisfies(process.version, "0.10.x")) {
+    process.send({
+        error: "The agent supports only version '0.10.x' of Node.js."
+    });
+}
 
 initialize();
 

@@ -156,6 +156,13 @@ function run() {
         }, waitUntilRestart);
     });
 
+    agentProcess.on("message", function (data) {
+        if (data.error) {
+            winston.error(data.error);
+            shutdownAgent();
+        }
+    });
+
     winston.info("Agent is starting ..." + os.EOL + os.EOL + os.EOL + "\t\tPress Control-C to exit." + os.EOL + os.EOL);
 }
 
@@ -357,15 +364,7 @@ function setupProcess() {
     }
 
     process.on("SIGINT", function () {
-        process.exitCode = 0;
-
-        if (agentProcess) {
-            agentProcess.removeAllListeners("exit");
-            agentProcess.send({event: "SIGINT"});
-            agentProcess.on("exit", function () {
-                process.exit();
-            });
-        } else process.exit();
+        shutdownAgent();
     });
 
     process.on("SIGTERM", function () {
@@ -382,4 +381,16 @@ function setupProcess() {
     });
 
     run();
+}
+
+function shutdownAgent() {
+    process.exitCode = 0;
+
+    if (agentProcess) {
+        agentProcess.removeAllListeners("exit");
+        agentProcess.send({event: "SIGINT"});
+        agentProcess.on("exit", function () {
+            process.exit();
+        });
+    } else process.exit();
 }
